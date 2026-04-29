@@ -1,0 +1,9 @@
+fastapi>=0.116
+uvicorn[standard]
+httpx
+aiosqlite
+APScheduler
+pyyaml
+python-dotenv
+loguru
+pydantic

@@ -1,0 +1,198 @@
+# DegenClaw 评分引擎配置
+# 各维度评分阈值与权重参数
+
+scoring:
+
+  # AI Council 入选概率 (0-35)
+  council:
+    rank_score:
+      thresholds:
+        - max_rank: 5
+          score: 15
+        - max_rank: 10
+          score: 12
+        - max_rank: 15
+          score: 8
+        - max_rank: 20
+          score: 4
+        - max_rank: 30
+          score: 2
+      default: 0
+    history_selection:
+      thresholds:
+        - min_count: 3
+          score: 10
+        - min_count: 2
+          score: 7
+        - min_count: 1
+          score: 4
+      default: 0
+    momentum:
+      lookback: 3
+      improvement_per_rank: 0.5
+      max_score: 5
+    stability:
+      min_stability: 0.8
+      high_score: 5
+      mid_stability: 0.6
+      mid_score: 3
+      low_stability: 0.4
+      low_score: 1
+      default: 0
+    max_total: 35
+
+  # 交易表现 (0-20)
+  trading:
+    pnl:
+      improvement_thresholds:
+        - min_pct: 20
+          score: 8
+        - min_pct: 10
+          score: 6
+        - min_pct: 5
+          score: 4
+        - min_pct: -5
+          score: 2
+      default: 0
+      single_snapshot_fallback: 2
+    drawdown:
+      max_drawdown: -10
+      high_score: 4
+      mid_drawdown: -20
+      mid_score: 3
+      low_drawdown: -30
+      low_score: 2
+      min_drawdown: -50
+      min_score: 1
+      default: 2
+      no_data_score: 2
+    trade_frequency:
+      thresholds:
+        - min_trades: 100
+          score: 4
+        - min_trades: 50
+          score: 3
+        - min_trades: 20
+          score: 2
+        - min_trades: 5
+          score: 1
+      default: 0
+    single_trade_penalty:
+      max_pnl_ratio: 0.5  # 单笔 PnL 占比超过此值触发扣分
+      penalty: -2
+    max_total: 20
+
+  # 排名趋势 (0-15)
+  rank_trend:
+    change_1h:
+      thresholds:
+        - min_change: 5
+          score: 5
+        - min_change: 3
+          score: 4
+        - min_change: 1
+          score: 2
+      default: 0
+    change_24h:
+      thresholds:
+        - min_change: 10
+          score: 5
+        - min_change: 5
+          score: 4
+        - min_change: 3
+          score: 3
+        - min_change: 1
+          score: 1
+      default: 0
+    threshold_boost:
+      cross_20_to_15: 3
+      cross_15_to_10: 2
+    top10_drop_penalty: -2
+    max_total: 15
+
+  # Token 市场质量 (0-15)
+  token_market:
+    liquidity:
+      thresholds:
+        - min_liquidity: 500000
+          score: 5
+        - min_liquidity: 200000
+          score: 4
+        - min_liquidity: 100000
+          score: 3
+        - min_liquidity: 50000
+          score: 2
+        - min_liquidity: 20000
+          score: 1
+      default: 0
+    volume:
+      thresholds:
+        - min_volume: 500000
+          score: 4
+        - min_volume: 100000
+          score: 3
+        - min_volume: 20000
+          score: 2
+        - min_volume: 1000
+          score: 1
+      default: 0
+    slippage:
+      thresholds:
+        - max_slippage: 0.5
+          score: 3
+        - max_slippage: 1
+          score: 2
+        - max_slippage: 2
+          score: 1
+      default: 0
+      no_data_score: 1
+    holder:
+      thresholds:
+        - max_pct: 20
+          score: 3
+        - max_pct: 35
+          score: 2
+        - max_pct: 50
+          score: 1
+      default: 0
+      no_data_score: 1
+    max_total: 15
+
+  # 注意力 (0-10)
+  visibility:
+    default_score: 3
+    max_total: 10
+
+  # 风险扣分 (-20 ~ 0)
+  risk_penalty:
+    price_surge:
+      thresholds:
+        - min_change: 200
+          penalty: -5
+        - min_change: 100
+          penalty: -3
+        - min_change: 50
+          penalty: -1
+    low_liquidity:
+      thresholds:
+        - max_liquidity: 20000
+          penalty: -4
+        - max_liquidity: 50000
+          penalty: -2
+    high_slippage:
+      thresholds:
+        - min_slippage: 3
+          penalty: -3
+        - min_slippage: 2
+          penalty: -1
+    holder_concentration:
+      thresholds:
+        - min_pct: 60
+          penalty: -3
+        - min_pct: 45
+          penalty: -1
+    turnover_anomaly:
+      max_vol_liq_ratio: 5
+      penalty: -3
+    min_penalty: -20
+    max_penalty: 0

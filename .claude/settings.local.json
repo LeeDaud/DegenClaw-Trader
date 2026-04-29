@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:app.virtuals.io)",
+      "WebFetch(domain:api2.virtuals.io)",
+      "WebSearch",
+      "Bash(\"D:/AAA-Project/000-dependencies/venv-015-okx-robot/Scripts/python.exe\" --version)",
+      "Bash(\"D:/AAA-Project/000-dependencies/venv-015-okx-robot/Scripts/pip.exe\" list *)",
+      "Bash(\"D:/AAA-Project/000-dependencies/venv-we-mp-rss/Scripts/python.exe\" --version)",
+      "Bash(\"D:/AAA-Project/000-dependencies/venv-we-mp-rss/Scripts/pip.exe\" list *)",
+      "Bash(rm -f \"D:\\\\AAA-Project\\\\017-DegenClaw-Trading\\\\frontend\\\\web\\\\src\\\\App.css\")",
+      "Bash(npx tsc *)",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/health)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('OK' if d['success'] else 'FAIL'\\)\")",
+      "Bash(curl -s \"http://127.0.0.1:8000/api/v1/agents?limit=50\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'Count: {len\\(d[\\\\\"data\\\\\"][\\\\\"agents\\\\\"]\\)}'\\)\")",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/agents/agent_001)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); s=d['data']['latest_snapshot']; print\\(f'{d[\\\\\"data\\\\\"][\\\\\"name\\\\\"]} rank={s[\\\\\"rank\\\\\"]} pnl_24h={s[\\\\\"pnl_24h\\\\\"]}%'\\)\")",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/tokens)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'Count: {len\\(d[\\\\\"data\\\\\"][\\\\\"tokens\\\\\"]\\)}'\\)\")",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/dashboard)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'Agents: {d[\\\\\"data\\\\\"][\\\\\"agent_count\\\\\"]}, Events: {len\\(d[\\\\\"data\\\\\"][\\\\\"recent_events\\\\\"]\\)}'\\)\")",
+      "Bash(curl -s \"http://127.0.0.1:8000/api/v1/events?limit=5\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'Events: {len\\(d[\\\\\"data\\\\\"][\\\\\"events\\\\\"]\\)}'\\)\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/control/polling/scan)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'Scan: agents={d[\\\\\"data\\\\\"].get\\(\\\\\"agents\\\\\",\\\\\"?\\\\\"\\)} tokens={d[\\\\\"data\\\\\"].get\\(\\\\\"tokens\\\\\",\\\\\"?\\\\\"\\)}'\\)\")",
+      "Bash(curl -s http://localhost:5173/api/v1/health)",
+      "Bash(curl *)",
+      "Bash(python -c ' *)",
+      "Bash(nohup python *)",
+      "Bash(echo \"Started PID: $!\")",
+      "Bash(python -m json.tool)",
+      "Bash(python -m pip list)",
+      "Bash(python -c \"import uvicorn; print\\('uvicorn ok'\\)\")",
+      "Bash(netstat -ano)"
+    ]
+  }
+}

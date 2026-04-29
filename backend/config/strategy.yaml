@@ -1,0 +1,34 @@
+# DegenClaw Alpha Engine - 策略配置
+
+scoring:
+  min_watch_score: 60
+  min_candidate_score: 70
+  min_probe_buy_score: 75
+  min_confirm_buy_score: 80
+
+liquidity:
+  min_liquidity_usd: 20000
+  max_buy_slippage_pct: 3
+  max_sell_slippage_pct: 5
+
+momentum:
+  max_price_change_1h_pct: 60
+  max_price_change_24h_pct: 150
+
+risk:
+  max_token_exposure_pct: 5
+  max_total_exposure_pct: 20
+  max_single_trade_pct: 2
+  daily_loss_limit_pct: 3
+  max_consecutive_losses: 3
+  max_trades_per_day: 10
+  cooldown_minutes: 10
+
+execution:
+  auto_trade_enabled: false
+  paper_trade_enabled: true
+  require_manual_confirmation: true
+
+collector:
+  interval_seconds: 300
+  agent_page_size: 50
