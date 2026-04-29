@@ -350,3 +350,10 @@ async def trigger_scan(request: Request) -> dict[str, Any]:
     controller = get_controller(request)
     result = await controller.scan_once(trigger="manual")
     return _api_ok(result)
+
+
+@router.post("/control/signals/generate")
+async def trigger_signal_generation(request: Request) -> dict[str, Any]:
+    controller = get_controller(request)
+    result = await controller.signal_gen_once(trigger="manual")
+    return _api_ok(result)

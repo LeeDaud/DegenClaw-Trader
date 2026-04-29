@@ -147,3 +147,80 @@ export async function fetchEvents(limit = 50, module?: string, level?: string) {
 export async function fetchScores(limit = 50) {
   return apiGet<{ scores: AgentScoreData[] }>(`/scores?limit=${limit}`)
 }
+
+export interface TradeSignalData {
+  id: number
+  signal_id: string
+  agent_id: string
+  agent_name: string
+  token_address: string
+  action: string
+  confidence: string
+  reason: string
+  key_factors: string
+  max_position_usdc: number
+  slippage_limit_pct: number
+  stop_loss_pct: number
+  take_profit_pct: number
+  time_exit_hours: number
+  risk_checks: string
+  window: string
+  status: string
+  created_at: string
+  expires_at: string
+}
+
+export interface PaperPositionData {
+  id: number
+  position_id: string
+  signal_id: string
+  agent_id: string
+  token_address: string
+  action: string
+  entry_price: number
+  amount_token: number
+  cost_usdc: number
+  entry_slippage: number
+  entered_at: string
+  current_price: number
+  unrealized_pnl: number
+  exit_price: number
+  realized_pnl: number
+  exit_slippage: number
+  exited_at: string
+  exit_reason: string
+  stop_loss_pct: number
+  take_profit_pct: number
+  time_exit_hours: number
+  status: string
+}
+
+export interface PaperPerformance {
+  summary: {
+    total_trades: number
+    open_positions: number
+    win_rate: number
+    total_pnl_usdc: number
+    avg_pnl_usdc: number
+    best_trade: number
+    worst_trade: number
+  }
+  recent_trades: PaperPositionData[]
+  open_positions: PaperPositionData[]
+}
+
+export async function fetchSignals(limit = 50, status?: string) {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (status) params.set('status', status)
+  return apiGet<{ signals: TradeSignalData[] }>(`/signals?${params}`)
+}
+
+export async function fetchPositions(limit = 50, status?: string) {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (status) params.set('status', status)
+  return apiGet<{ positions: PaperPositionData[] }>(`/positions/paper?${params}`)
+}
+
+export async function fetchPerformance() {
+  return apiGet<PaperPerformance>('/performance/paper')
+}

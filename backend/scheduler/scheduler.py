@@ -13,6 +13,9 @@ from notifiers.feishu_notifier import FeishuNotifier
 from parsers.degenclaw_parser import DegenClawParser
 from scoring.engine import DegenClawScoreEngine
 from signals.signal_engine import SignalEngine
+from decision.event_window import EventWindowManager
+from decision.engine import TradingDecisionEngine, DecisionInput
+from decision.paper_trader import PaperTrader, PaperPosition
 
 try:
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -156,6 +159,226 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
     return summary
 
 
+async def run_signal_generation(database: Database, settings: Settings) -> dict[str, int]:
+    """执行一轮信号生成 + Paper Trading"""
+    import json
+    trace_id = build_event_id()
+    now = utc_now_iso()
+    summary: dict[str, int] = {"signals": 0, "buys": 0, "sells": 0}
+
+    try:
+        # 1. 获取最新评分
+        scores = database.list_agent_scores(limit=100)
+        if not scores:
+            logger.info("signal generation skipped: no scores")
+            return summary
+
+        # 2. 获取事件窗口
+        window_mgr = EventWindowManager()
+        window = window_mgr.get_current_window()
+
+        # 3. 初始化决策引擎和 paper trader
+        engine = TradingDecisionEngine(window_mgr)
+        paper_trader = PaperTrader()
+
+        # 加载已有的 open positions
+        existing_positions = database.get_open_paper_positions()
+        loaded = []
+        for p in existing_positions:
+            try:
+                loaded.append(PaperPosition.from_record(p))
+            except Exception:
+                continue
+        paper_trader.load_positions(loaded)
+
+        # 4. 对每个有评分的 Agent 生成信号
+        for score in scores:
+            agent_id = score["agent_id"]
+            agent = database.get_agent(agent_id)
+            if not agent:
+                continue
+
+            snapshots = database.get_agent_snapshots(agent_id, limit=3)
+            market = None
+            if agent.get("token_address"):
+                market = database.get_latest_market_snapshot(agent["token_address"])
+
+            latest_snap = snapshots[0] if snapshots else {}
+            rank_prev = snapshots[1].get("rank", 0) if len(snapshots) >= 2 else latest_snap.get("rank", 0)
+            rank_oldest = snapshots[-1].get("rank", 0) if len(snapshots) >= 2 else latest_snap.get("rank", 0)
+
+            rank_change_1h = rank_prev - (latest_snap.get("rank", 0) or 0)
+            rank_change_24h = rank_oldest - (latest_snap.get("rank", 0) or 0)
+
+            # 检查是否有持仓
+            token_positions = [p for p in paper_trader.get_open_positions() if p.agent_id == agent_id]
+            has_position = len(token_positions) > 0
+            pos_pnl = token_positions[0].unrealized_pnl if token_positions else 0.0
+
+            inp = DecisionInput(
+                agent_id=agent_id,
+                agent_name=agent.get("name", ""),
+                token_address=agent.get("token_address", ""),
+                score_total=score["score_total"],
+                council_score=score["council_probability_score"],
+                trading_score=score["trading_performance_score"],
+                rank_trend_score=score["rank_trend_score"],
+                token_market_score=score["token_market_score"],
+                risk_penalty=score["risk_penalty"],
+                rank=latest_snap.get("rank", 0) or 0,
+                rank_change_1h=rank_change_1h,
+                rank_change_24h=rank_change_24h,
+                is_top_10=bool(latest_snap.get("is_top_10", False)),
+                is_selected=bool(latest_snap.get("is_selected", False)),
+                price_usd=float(market.get("price_usd", 0)) if market else 0,
+                liquidity_usd=float(market.get("liquidity_usd", 0)) if market else 0,
+                volume_24h=float(market.get("volume_24h", 0)) if market else 0,
+                price_change_24h=float(market.get("price_change_24h", 0)) if market else 0,
+                buy_slippage=float(market.get("buy_slippage", 0)) if market else 0,
+                has_position=has_position,
+                position_pnl_pct=pos_pnl,
+            )
+
+            signal = engine.decide(inp, window)
+            if signal.action == "watch":
+                continue
+
+            # 保存信号
+            from db.models import TradeSignalModel
+            database.insert_trade_signal(TradeSignalModel(
+                signal_id=signal.signal_id,
+                agent_id=signal.agent_id,
+                token_address=signal.token_address,
+                agent_name=agent.get("name", ""),
+                action=signal.action,
+                confidence=signal.confidence,
+                reason=signal.reason,
+                key_factors=json.dumps(signal.key_factors),
+                max_position_usdc=signal.max_position_usdc,
+                slippage_limit_pct=signal.slippage_limit_pct,
+                stop_loss_pct=signal.stop_loss_pct,
+                take_profit_pct=signal.take_profit_pct,
+                time_exit_hours=signal.time_exit_hours,
+                risk_checks=json.dumps(signal.risk_checks),
+                window=signal.window,
+                status=signal.status,
+                created_at=signal.created_at,
+                expires_at=signal.expires_at,
+            ))
+            summary["signals"] += 1
+
+            # 5. 执行 paper trade
+            if signal.action in ("probe_buy", "confirm_buy"):
+                pos = paper_trader.execute_buy(
+                    signal_id=signal.signal_id,
+                    agent_id=signal.agent_id,
+                    token_address=signal.token_address,
+                    action=signal.action,
+                    max_position_usdc=signal.max_position_usdc,
+                    price_usd=inp.price_usd,
+                    liquidity_usd=inp.liquidity_usd,
+                    buy_slippage=inp.buy_slippage,
+                    stop_loss_pct=signal.stop_loss_pct,
+                    take_profit_pct=signal.take_profit_pct,
+                    time_exit_hours=signal.time_exit_hours,
+                )
+                if pos:
+                    from db.models import PaperPositionModel
+                    database.insert_paper_position(PaperPositionModel(
+                        position_id=pos.position_id,
+                        signal_id=pos.signal_id,
+                        agent_id=pos.agent_id,
+                        token_address=pos.token_address,
+                        action=pos.action,
+                        entry_price=pos.entry_price,
+                        amount_token=pos.amount_token,
+                        cost_usdc=pos.cost_usdc,
+                        entry_slippage=pos.entry_slippage,
+                        entered_at=pos.entered_at,
+                        current_price=pos.current_price,
+                        unrealized_pnl=pos.unrealized_pnl,
+                        exit_price=pos.exit_price or 0,
+                        realized_pnl=pos.realized_pnl or 0,
+                        exit_slippage=pos.exit_slippage or 0,
+                        exited_at=pos.exited_at or "",
+                        exit_reason=pos.exit_reason or "",
+                        stop_loss_pct=pos.stop_loss_pct,
+                        take_profit_pct=pos.take_profit_pct,
+                        time_exit_hours=pos.time_exit_hours,
+                        status=pos.status,
+                    ))
+                    summary["buys"] += 1
+
+        # 6. 更新持仓价格并检查退出
+        for pos in paper_trader.get_open_positions():
+            market = None
+            if pos.token_address:
+                market = database.get_latest_market_snapshot(pos.token_address)
+            current_price = float(market.get("price_usd", 0)) if market else 0
+            if current_price <= 0:
+                continue
+
+            paper_trader.update_price(pos, current_price)
+            exit_reason = paper_trader.check_exit_conditions(pos, current_price)
+            if exit_reason:
+                sell_slippage = float(market.get("sell_slippage", 0)) if market else 0
+                paper_trader.execute_sell(pos, current_price, pos.cost_usdc, sell_slippage, exit_reason)
+                summary["sells"] += 1
+
+            # 持久化持仓
+            from db.models import PaperPositionModel
+            database.update_paper_position(PaperPositionModel(
+                position_id=pos.position_id,
+                signal_id=pos.signal_id,
+                agent_id=pos.agent_id,
+                token_address=pos.token_address,
+                action=pos.action,
+                entry_price=pos.entry_price,
+                amount_token=pos.amount_token,
+                cost_usdc=pos.cost_usdc,
+                entry_slippage=pos.entry_slippage,
+                entered_at=pos.entered_at,
+                current_price=pos.current_price,
+                unrealized_pnl=pos.unrealized_pnl,
+                exit_price=pos.exit_price or 0,
+                realized_pnl=pos.realized_pnl or 0,
+                exit_slippage=pos.exit_slippage or 0,
+                exited_at=pos.exited_at or "",
+                exit_reason=pos.exit_reason or "",
+                stop_loss_pct=pos.stop_loss_pct,
+                take_profit_pct=pos.take_profit_pct,
+                time_exit_hours=pos.time_exit_hours,
+                status=pos.status,
+            ))
+
+        logger.info("signal generation: %d signals, %d buys, %d sells",
+                     summary["signals"], summary["buys"], summary["sells"])
+
+        database.insert_system_event(SystemEvent(
+            event_id=build_event_id(),
+            module="signal",
+            level="info",
+            event="signal_generation_completed",
+            detail=f"signals={summary['signals']} buys={summary['buys']} sells={summary['sells']}",
+            trace_id=trace_id,
+            created_at=utc_now_iso(),
+        ))
+
+    except Exception as exc:
+        logger.exception("signal generation failed")
+        database.insert_system_event(SystemEvent(
+            event_id=build_event_id(),
+            module="signal",
+            level="error",
+            event="signal_generation_failed",
+            detail=str(exc),
+            trace_id=trace_id,
+            created_at=utc_now_iso(),
+        ))
+
+    return summary
+
+
 class PollingController:
     """定时采集控制器 — 参考 SignalHub PollingController 模式"""
 
@@ -164,10 +387,15 @@ class PollingController:
         self.settings = settings
         self._started = False
         self._scan_lock = asyncio.Lock()
+        self._signal_lock = asyncio.Lock()
         self.last_summary: dict[str, int] | None = None
         self.last_error: str | None = None
         self.last_started_at: str | None = None
         self.last_completed_at: str | None = None
+        self.last_signal_summary: dict[str, int] | None = None
+        self.last_signal_error: str | None = None
+        self.last_signal_started_at: str | None = None
+        self.last_signal_completed_at: str | None = None
         self.mode = "auto"
 
         if AsyncIOScheduler is not None:
@@ -178,6 +406,16 @@ class PollingController:
                 seconds=settings.poll_interval_seconds,
                 kwargs={},
                 id="degenclaw-poll",
+                replace_existing=True,
+                max_instances=1,
+                coalesce=True,
+            )
+            self.scheduler.add_job(
+                self.scheduled_signal_gen,
+                "interval",
+                seconds=900,  # 15 分钟
+                kwargs={},
+                id="degenclaw-signal",
                 replace_existing=True,
                 max_instances=1,
                 coalesce=True,
@@ -219,14 +457,42 @@ class PollingController:
                 logger.exception("polling scan failed trigger=%s", trigger)
                 raise
 
+    async def scheduled_signal_gen(self) -> None:
+        if self.mode != "auto":
+            return
+        await self.signal_gen_once(trigger="auto")
+
+    async def signal_gen_once(self, *, trigger: str) -> dict[str, int]:
+        async with self._signal_lock:
+            self.last_signal_started_at = utc_now_iso()
+            self.last_signal_error = None
+            try:
+                summary = await run_signal_generation(self.database, self.settings)
+                self.last_signal_completed_at = utc_now_iso()
+                self.last_signal_summary = {**summary, "trigger": trigger}
+                return self.last_signal_summary
+            except Exception as exc:
+                self.last_signal_completed_at = utc_now_iso()
+                self.last_signal_error = str(exc)
+                logger.exception("signal gen failed trigger=%s", trigger)
+                raise
+
     def get_status(self) -> dict:
         return {
             "mode": self.mode,
             "running": self.mode == "auto",
             "is_scanning": self._scan_lock.locked(),
+            "is_generating_signals": self._signal_lock.locked(),
             "poll_interval_seconds": self.settings.poll_interval_seconds,
+            "signal_interval_seconds": 900,
             "last_started_at": self.last_started_at,
             "last_completed_at": self.last_completed_at,
             "last_error": self.last_error,
             "last_summary": self.last_summary,
+            "signal": {
+                "last_started_at": self.last_signal_started_at,
+                "last_completed_at": self.last_signal_completed_at,
+                "last_error": self.last_signal_error,
+                "last_summary": self.last_signal_summary,
+            },
         }
