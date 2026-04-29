@@ -4212,3 +4212,68 @@ sqlite3.OperationalError: table agent_scores has no column named grade
 2026-04-29 21:46:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
 2026-04-29 21:46:04 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
 2026-04-29 21:46:07 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 21:46:24 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 21:46:24 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 21:46:24 | INFO    | scheduler.scheduler | 赛季过滤: 移除 221 个非当季 Agent (剩 56)
+2026-04-29 21:46:26 | INFO    | scheduler.scheduler | 信号检测完成: 生成 2 条预警
+2026-04-29 21:46:29 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 21:46:29 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_dump - Zodiac
+2026-04-29 21:46:31 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 21:46:31 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: combined_dump - Zodiac
+2026-04-29 21:46:31 | INFO    | scheduler.scheduler | 飞书通知: 成功 2 / 总数 2
+2026-04-29 21:46:32 | INFO    | scoring.engine | 评分完成: 69 个 Agent
+2026-04-29 21:46:33 | INFO    | scheduler.scheduler | 评分完成: 69 个 Agent
+2026-04-29 21:46:33 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 13:51:00 UTC)" executed successfully
+2026-04-29 21:51:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 13:56:00 UTC)" (scheduled at 2026-04-29 13:51:00.257334+00:00)
+2026-04-29 21:51:02 | WARNING | apscheduler.executors.base | Run time of job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 14:06:00 UTC)" was missed by 0:00:02.240509
+2026-04-29 21:51:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 21:51:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 21:51:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 21:51:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 21:51:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 21:51:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 21:51:04 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 21:51:08 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 21:51:08 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 21:51:08 | INFO    | scheduler.scheduler | 赛季过滤: 移除 258 个非当季 Agent (剩 69)
+2026-04-29 21:51:10 | INFO    | scoring.engine | 评分完成: 69 个 Agent
+2026-04-29 21:51:11 | INFO    | scheduler.scheduler | 评分完成: 69 个 Agent
+2026-04-29 21:51:11 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 13:56:00 UTC)" executed successfully
+2026-04-29 21:56:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 14:01:00 UTC)" (scheduled at 2026-04-29 13:56:00.257334+00:00)
+2026-04-29 21:56:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 21:56:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 21:56:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 21:56:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 21:56:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 21:56:05 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 21:56:06 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 21:56:13 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 21:56:13 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 21:56:13 | INFO    | scheduler.scheduler | 赛季过滤: 移除 258 个非当季 Agent (剩 69)
+2026-04-29 21:56:16 | INFO    | scoring.engine | 评分完成: 69 个 Agent
+2026-04-29 21:56:17 | INFO    | scheduler.scheduler | 评分完成: 69 个 Agent
+2026-04-29 21:56:17 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 14:01:00 UTC)" executed successfully
+2026-04-29 22:01:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 14:06:00 UTC)" (scheduled at 2026-04-29 14:01:00.257334+00:00)
+2026-04-29 22:01:05 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 22:01:05 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 22:01:06 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 22:01:11 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 22:01:11 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 22:01:11 | INFO    | scheduler.scheduler | 赛季过滤: 移除 114 个非当季 Agent (剩 36)
+2026-04-29 22:01:14 | INFO    | scheduler.scheduler | 信号检测完成: 生成 6 条预警
+2026-04-29 22:01:17 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 22:01:17 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_dump - pepe ai
+2026-04-29 22:01:20 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 22:01:20 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: combined_dump - pepe ai
+2026-04-29 22:01:22 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 22:01:22 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_dump - Velmora
+2026-04-29 22:01:25 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 22:01:25 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: combined_dump - Velmora
+2026-04-29 22:01:28 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 22:01:28 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_dump - 4g3nt
+2026-04-29 22:01:30 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 22:01:30 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: combined_dump - 4g3nt
+2026-04-29 22:01:30 | INFO    | scheduler.scheduler | 飞书通知: 成功 6 / 总数 6
+2026-04-29 22:01:31 | INFO    | scoring.engine | 评分完成: 69 个 Agent
+2026-04-29 22:01:31 | INFO    | scheduler.scheduler | 评分完成: 69 个 Agent
+2026-04-29 22:01:31 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 14:06:00 UTC)" executed successfully
