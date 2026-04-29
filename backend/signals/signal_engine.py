@@ -22,8 +22,11 @@ SIGNAL_THRESHOLDS = {
     "combined_dump_score": 35,  # 综合看跌信号分（原 25）
 }
 
-# 同一 Agent 同一类型的预警冷却时间（秒）
+# 同一 Agent 同一类型预警冷却时间（秒）
 ALERT_COOLDOWN_SECONDS = 21600  # 6 小时
+
+# 同一 Agent 全局冷却时间（秒）：任一类型触发后，该 Agent 其他类型也暂不推送
+AGENT_GLOBAL_COOLDOWN_SECONDS = 3600  # 1 小时
 
 
 class SignalEngine:
@@ -31,7 +34,11 @@ class SignalEngine:
         self.database = database
 
     def run_check(self) -> list[Alert]:
-        """对所有 Agent 执行一轮信号检测，返回新生成的预警"""
+        """对所有 Agent 执行一轮信号检测，返回新生成的预警
+
+        聚合策略：同 Agent 的多类型信号合并为一条预警发送，
+        避免同一 Agent 同时触发 surge + rank_surge + volume_spike 三条消息。
+        """
         now = utc_now_iso()
         alerts: list[Alert] = []
 
@@ -55,38 +62,118 @@ class SignalEngine:
 
             # 分析各维度信号
             signals = self._analyze(agent_id, agent_name, latest, prev, market, snapshots)
+            if not signals:
+                continue
 
-            for sig in signals:
-                # 去重检查：同一 Agent + 同一类型在冷却期内不重复预警
-                if self._has_recent_alert(agent_id, sig["type"]):
-                    continue
+            # --- 聚合策略 ---
+            # 同 Agent 的所有信号合并为一条预警，冷却判定以"任一类型最近触发"为准
+            # 这样同一 Agent 最多每 GLOBAL_COOLDOWN 发一条，大幅降低频率
+            if not self._agent_can_alert(agent_id):
+                continue
 
-                alert_id = f"alert_{uuid4().hex[:16]}"
-                alert_id = f"alert_{uuid4().hex[:16]}"
-                alert = Alert(
-                    alert_id=alert_id,
-                    agent_id=agent_id,
-                    agent_name=agent_name,
-                    alert_type=sig["type"],
-                    severity=sig["severity"],
-                    title=sig["title"],
-                    detail=sig["detail"],
-                    score=sig["score"],
-                    snapshot_data=json.dumps({
-                        "latest_snapshot": {k: str(v) for k, v in latest.items()} if latest else {},
-                        "prev_snapshot": {k: str(v) for k, v in prev.items()} if prev else {},
-                        "market": {k: str(v) for k, v in market.items()} if market else {},
-                    }, ensure_ascii=False),
-                    notified=False,
-                    created_at=now,
-                )
-                self.database.insert_alert(alert)
+            alert = self._build_aggregated_alert(agent_id, agent_name, signals, latest, prev, market, now)
+            if alert:
+                self.database.insert_alert(alert, cooldown_seconds=ALERT_COOLDOWN_SECONDS)
                 alerts.append(alert)
 
         return alerts
 
+    def _agent_can_alert(self, agent_id: str) -> bool:
+        """检查 Agent 全局冷却：6 小时内是否已推送过任何预警"""
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        recent = self.database.list_alerts(limit=5, agent_id=agent_id)
+        for a in recent:
+            try:
+                created = datetime.fromisoformat(a["created_at"].replace("Z", "+00:00"))
+                if (now - created).total_seconds() < ALERT_COOLDOWN_SECONDS:
+                    return False
+            except (ValueError, KeyError):
+                continue
+        return True
+
+    def _build_aggregated_alert(
+        self,
+        agent_id: str,
+        agent_name: str,
+        signals: list[dict[str, Any]],
+        latest: dict[str, Any],
+        prev: dict[str, Any],
+        market: dict[str, Any] | None,
+        now: str,
+    ) -> Alert | None:
+        """将同 Agent 的多个信号合并为一条预警"""
+        # 确定最高严重级别
+        severity_order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+        max_sev = max(signals, key=lambda s: severity_order.get(s["severity"], 0))
+        total_score = sum(s["score"] for s in signals)
+
+        # 生成汇总标题和详情
+        type_labels = {
+            "surge": "收益暴涨",
+            "dump": "收益暴跌",
+            "rank_surge": "排名飙升",
+            "rank_dump": "排名暴跌",
+            "volume_spike": "成交量异常",
+            "price_surge": "价格暴涨",
+            "price_dump": "价格暴跌",
+            "combined_surge": "综合看涨",
+            "combined_dump": "综合看跌",
+        }
+
+        # 一级策略：按 signals 的方向（看涨/看跌/中性）分成最多两组
+        bullish = [s for s in signals if s["type"] in ("surge", "rank_surge", "price_surge", "combined_surge")]
+        bearish = [s for s in signals if s["type"] in ("dump", "rank_dump", "price_dump", "combined_dump")]
+        neutral = [s for s in signals if s["type"] == "volume_spike"]
+
+        parts: list[str] = []
+        for group, prefix, emoji in [
+            (bullish, "🟢", None),
+            (bearish, "🔴", None),
+            (neutral, "⚡", None),
+        ]:
+            for s in group:
+                label = type_labels.get(s["type"], s["type"])
+                parts.append(f"{label}")
+
+        # 确定整体类型
+        if bullish and not bearish:
+            agg_type = "combined_surge"
+        elif bearish and not bullish:
+            agg_type = "combined_dump"
+        elif bullish and bearish:
+            # 既有看涨又有看跌，以 max_sev 的方向为准
+            agg_type = max_sev["type"]
+        else:
+            agg_type = neutral[0]["type"] if neutral else "surge"
+
+        detail_lines = []
+        for s in signals:
+            detail_lines.append(f"  • {type_labels.get(s['type'], s['type'])}: {s['detail']}")
+        detail = "\n".join(detail_lines)
+
+        alert_id = f"alert_{uuid4().hex[:16]}"
+        alert = Alert(
+            alert_id=alert_id,
+            agent_id=agent_id,
+            agent_name=agent_name,
+            alert_type=agg_type,
+            severity=max_sev["severity"],
+            title=f"{agent_name} {len(signals)}项信号触发",
+            detail=detail,
+            score=total_score,
+            snapshot_data=json.dumps({
+                "latest_snapshot": {k: str(v) for k, v in latest.items()} if latest else {},
+                "prev_snapshot": {k: str(v) for k, v in prev.items()} if prev else {},
+                "market": {k: str(v) for k, v in market.items()} if market else {},
+            }, ensure_ascii=False),
+            notified=False,
+            created_at=now,
+        )
+        return alert
+
     def _has_recent_alert(self, agent_id: str, alert_type: str) -> bool:
-        """检查冷却期内是否已存在同类预警"""
+        """检查冷却期内是否已存在同类预警（保留供兼容，但 run_check 改用 _agent_can_alert）"""
         existing = self.database.list_alerts(
             limit=10, agent_id=agent_id, alert_type=alert_type,
         )

@@ -433,6 +433,9 @@ class PollingController:
         self.mode = "auto"
 
         if AsyncIOScheduler is not None:
+            from datetime import datetime, timedelta, timezone
+            # 延迟首次触发，避免与 startup scan 竞态
+            first_run = datetime.now(timezone.utc) + timedelta(seconds=settings.poll_interval_seconds)
             self.scheduler = AsyncIOScheduler(timezone="UTC")
             self.scheduler.add_job(
                 self.scheduled_scan,
@@ -443,6 +446,7 @@ class PollingController:
                 replace_existing=True,
                 max_instances=1,
                 coalesce=True,
+                next_run_time=first_run,
             )
             self.scheduler.add_job(
                 self.scheduled_signal_gen,
@@ -453,6 +457,7 @@ class PollingController:
                 replace_existing=True,
                 max_instances=1,
                 coalesce=True,
+                next_run_time=first_run + timedelta(seconds=900),
             )
         else:
             self.scheduler = None

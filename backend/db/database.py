@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -515,9 +516,23 @@ class Database:
 
     # --- System Events ---
 
-    def insert_alert(self, alert: Alert) -> None:
+    def insert_alert(self, alert: Alert, cooldown_seconds: int = 0) -> bool:
+        """插入预警，可选冷却检查（同 connection 原子操作，防竞态）。
+
+        若 cooldown_seconds > 0，则检查同 agent 在冷却期内是否已有预警，
+        有则跳过插入返回 False。
+        """
         with self._connect() as conn:
             try:
+                if cooldown_seconds > 0:
+                    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=cooldown_seconds)).isoformat()
+                    existing = conn.execute(
+                        "SELECT 1 FROM alerts WHERE agent_id = ? AND created_at > ? LIMIT 1",
+                        (alert.agent_id, cutoff),
+                    ).fetchone()
+                    if existing:
+                        return False
+
                 conn.execute(
                     """
                     INSERT INTO alerts(alert_id, agent_id, agent_name, alert_type, severity,
@@ -528,8 +543,9 @@ class Database:
                      alert.title, alert.detail, alert.score, alert.snapshot_data, int(alert.notified), alert.created_at),
                 )
                 conn.commit()
+                return True
             except sqlite3.IntegrityError:
-                pass
+                return False
 
     def list_alerts(self, limit: int = 50, offset: int = 0,
                     alert_type: str | None = None, agent_id: str | None = None,
