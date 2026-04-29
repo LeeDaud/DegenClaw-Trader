@@ -62,6 +62,7 @@ class DegenClawParser:
                 is_top_10=bool(item.get("is_top_10", rank <= 10)),
                 is_selected=bool(item.get("is_selected", False)),
                 last_trade_at=str(item.get("last_trade_at", "")),
+                total_realized_pnl=float(item.get("total_realized_pnl", 0)),
                 snapshot_at=now,
             )
             snapshots.append(snapshot)

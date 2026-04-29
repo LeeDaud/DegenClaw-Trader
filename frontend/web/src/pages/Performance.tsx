@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { TrendingUp, TrendingDown, RefreshCw, Trophy, Target, Award } from 'lucide-react'
+import { TrendingUp, TrendingDown, RefreshCw, Trophy, Target } from 'lucide-react'
 
 const API_BASE = '/api/v1'
 

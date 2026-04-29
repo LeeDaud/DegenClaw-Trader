@@ -2,10 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams, Link } from 'react-router-dom'
 import { fetchAgent } from '../api/client'
 import type { AgentScoreData } from '../api/client'
-import { ArrowLeft, TrendingUp, TrendingDown, Activity, Users, Shield, BarChart3, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, TrendingUp, TrendingDown, Activity, Users, Shield, BarChart3 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  BarChart, Bar, Cell,
 } from 'recharts'
 
 const labelColors: Record<string, string> = {
@@ -143,7 +142,7 @@ export default function AgentDetail() {
           <div className="text-right">
             <div className="text-xs text-gray-400">24h PnL</div>
             <div className={`text-xl font-bold ${(s?.pnl_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {s ? `${s.pnl_24h >= 0 ? '+' : ''}${s.pnl_24h}%` : '-'}
+              {s ? `${s.pnl_24h >= 0 ? '+' : ''}$${s.pnl_24h.toLocaleString()}` : '-'}
             </div>
           </div>
         </div>

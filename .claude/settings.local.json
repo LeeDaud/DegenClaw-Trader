@@ -32,7 +32,9 @@
       "Bash(python -m json.tool)",
       "Bash(python -m pip list)",
       "Bash(python -c \"import uvicorn; print\\('uvicorn ok'\\)\")",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "Bash(npm run *)",
+      "Bash(ssh *)"
     ]
   }
 }

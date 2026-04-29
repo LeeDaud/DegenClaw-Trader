@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS agent_snapshots (
     is_top_10 INTEGER NOT NULL DEFAULT 0,
     is_selected INTEGER NOT NULL DEFAULT 0,
     last_trade_at TEXT NOT NULL DEFAULT '',
+    total_realized_pnl REAL NOT NULL DEFAULT 0.0,
     snapshot_at TEXT NOT NULL
 );
 
@@ -226,6 +227,10 @@ class Database:
                 conn.execute("ALTER TABLE agent_snapshots ADD COLUMN last_trade_at TEXT NOT NULL DEFAULT ''")
             except sqlite3.OperationalError:
                 pass
+            try:
+                conn.execute("ALTER TABLE agent_snapshots ADD COLUMN total_realized_pnl REAL NOT NULL DEFAULT 0.0")
+            except sqlite3.OperationalError:
+                pass
             conn.commit()
 
     # --- Agent ---
@@ -310,12 +315,14 @@ class Database:
             conn.executemany(
                 """
                 INSERT INTO agent_snapshots(agent_id, rank, pnl_24h, pnl_7d, win_rate, max_drawdown,
-                                            trade_count, is_top_10, is_selected, last_trade_at, snapshot_at)
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                            trade_count, is_top_10, is_selected, last_trade_at,
+                                            total_realized_pnl, snapshot_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
                     (s.agent_id, s.rank, s.pnl_24h, s.pnl_7d, s.win_rate, s.max_drawdown,
-                     s.trade_count, int(s.is_top_10), int(s.is_selected), s.last_trade_at, s.snapshot_at)
+                     s.trade_count, int(s.is_top_10), int(s.is_selected), s.last_trade_at,
+                     s.total_realized_pnl, s.snapshot_at)
                     for s in snapshots
                 ],
             )
@@ -336,6 +343,15 @@ class Database:
                 (agent_id, limit),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    def get_agent_snapshot_before(self, agent_id: str, before: str) -> dict[str, Any] | None:
+        """获取指定时间之前的最新一条快照"""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM agent_snapshots WHERE agent_id = ? AND snapshot_at <= ? ORDER BY snapshot_at DESC LIMIT 1",
+                (agent_id, before),
+            ).fetchone()
+        return dict(row) if row else None
 
     # --- Token ---
 

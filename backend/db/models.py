@@ -70,6 +70,7 @@ class AgentSnapshot:
     is_top_10: bool
     is_selected: bool
     last_trade_at: str
+    total_realized_pnl: float
     snapshot_at: str
 
     @classmethod
@@ -85,6 +86,7 @@ class AgentSnapshot:
             is_top_10=bool(row["is_top_10"]),
             is_selected=bool(row["is_selected"]),
             last_trade_at=row.get("last_trade_at", ""),
+            total_realized_pnl=row.get("total_realized_pnl", 0.0),
             snapshot_at=row["snapshot_at"],
         )
 

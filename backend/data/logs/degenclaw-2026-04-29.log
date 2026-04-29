@@ -3637,3 +3637,221 @@ sqlite3.OperationalError: table agent_scores has no column named grade
 2026-04-29 18:56:19 | INFO    | scoring.engine | 评分完成: 68 个 Agent
 2026-04-29 18:56:19 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
 2026-04-29 18:56:19 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:01:00 UTC)" executed successfully
+2026-04-29 19:01:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:06:00 UTC)" (scheduled at 2026-04-29 11:01:00.257334+00:00)
+2026-04-29 19:01:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:01:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:01:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:01:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:01:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:01:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:01:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:01:04 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:01:04 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:01:04 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:01:05 | INFO    | scheduler.scheduler | 信号检测完成: 生成 1 条预警
+2026-04-29 19:01:06 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:01:06 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: combined_surge - Wind Water
+2026-04-29 19:01:06 | INFO    | scheduler.scheduler | 飞书通知: 成功 1 / 总数 1
+2026-04-29 19:01:06 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:01:06 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:01:06 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:06:00 UTC)" executed successfully
+2026-04-29 19:06:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:11:00 UTC)" (scheduled at 2026-04-29 11:06:00.257334+00:00)
+2026-04-29 19:06:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 11:21:00 UTC)" (scheduled at 2026-04-29 11:06:00.258198+00:00)
+2026-04-29 19:06:00 | INFO    | scheduler.scheduler | signal generation: 0 signals, 0 buys, 0 sells
+2026-04-29 19:06:00 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 11:21:00 UTC)" executed successfully
+2026-04-29 19:06:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:06:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:06:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:06:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:06:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:06:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:06:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:06:05 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:06:05 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:06:05 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:06:05 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:06:06 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:06:06 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:11:00 UTC)" executed successfully
+2026-04-29 19:11:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:16:00 UTC)" (scheduled at 2026-04-29 11:11:00.257334+00:00)
+2026-04-29 19:11:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:11:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:11:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:11:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:11:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:11:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:11:04 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:11:08 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:11:08 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:11:08 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:11:09 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:11:09 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:11:09 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:16:00 UTC)" executed successfully
+2026-04-29 19:16:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:21:00 UTC)" (scheduled at 2026-04-29 11:16:00.257334+00:00)
+2026-04-29 19:16:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:16:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:16:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:16:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:16:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:16:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:16:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:16:05 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:16:05 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:16:05 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:16:05 | INFO    | scheduler.scheduler | 信号检测完成: 生成 5 条预警
+2026-04-29 19:16:06 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:16:06 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - ZMAC
+2026-04-29 19:16:07 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:16:07 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - DennisMind
+2026-04-29 19:16:08 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:16:08 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - VENOM
+2026-04-29 19:16:09 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:16:09 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - FluxBot AI
+2026-04-29 19:16:10 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:16:10 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - ColdPotato
+2026-04-29 19:16:10 | INFO    | scheduler.scheduler | 飞书通知: 成功 5 / 总数 5
+2026-04-29 19:16:10 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:16:10 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:16:10 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:21:00 UTC)" executed successfully
+2026-04-29 19:21:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:26:00 UTC)" (scheduled at 2026-04-29 11:21:00.257334+00:00)
+2026-04-29 19:21:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 11:36:00 UTC)" (scheduled at 2026-04-29 11:21:00.258198+00:00)
+2026-04-29 19:21:00 | INFO    | scheduler.scheduler | signal generation: 0 signals, 0 buys, 0 sells
+2026-04-29 19:21:00 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 11:36:00 UTC)" executed successfully
+2026-04-29 19:21:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:21:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:21:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:21:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:21:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:21:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:21:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:21:04 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:21:04 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:21:04 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:21:04 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:21:04 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:21:04 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:26:00 UTC)" executed successfully
+2026-04-29 19:26:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:31:00 UTC)" (scheduled at 2026-04-29 11:26:00.257334+00:00)
+2026-04-29 19:26:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:26:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:26:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:26:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:26:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:26:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:26:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:26:08 | WARNING | collectors.season_manager | fetch seasons failed: 
+2026-04-29 19:26:08 | INFO    | scheduler.scheduler | 未获取到赛季信息，不过滤
+2026-04-29 19:26:09 | INFO    | scheduler.scheduler | 信号检测完成: 生成 3 条预警
+2026-04-29 19:26:10 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:26:10 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - Donchian Breakout Trend
+2026-04-29 19:26:11 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:26:11 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - BB RSI Reversion
+2026-04-29 19:26:12 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:26:12 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - Precision Swing
+2026-04-29 19:26:12 | INFO    | scheduler.scheduler | 飞书通知: 成功 3 / 总数 3
+2026-04-29 19:26:13 | INFO    | scoring.engine | 评分完成: 327 个 Agent
+2026-04-29 19:26:13 | INFO    | scheduler.scheduler | 评分完成: 327 个 Agent
+2026-04-29 19:26:13 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:31:00 UTC)" executed successfully
+2026-04-29 19:31:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:36:00 UTC)" (scheduled at 2026-04-29 11:31:00.257334+00:00)
+2026-04-29 19:31:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:31:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:31:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:31:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:31:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:31:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:31:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:31:04 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:31:04 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:31:04 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:31:05 | INFO    | scheduler.scheduler | 信号检测完成: 生成 4 条预警
+2026-04-29 19:31:06 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:31:06 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - OracleWars
+2026-04-29 19:31:07 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:31:07 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - Captain Dackie
+2026-04-29 19:31:08 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:31:08 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - Bitcoin On Virtuals
+2026-04-29 19:31:09 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:31:09 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - $TRUST ME BROs
+2026-04-29 19:31:09 | INFO    | scheduler.scheduler | 飞书通知: 成功 4 / 总数 4
+2026-04-29 19:31:09 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:31:09 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:31:09 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:36:00 UTC)" executed successfully
+2026-04-29 19:36:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:41:00 UTC)" (scheduled at 2026-04-29 11:36:00.257334+00:00)
+2026-04-29 19:36:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 11:51:00 UTC)" (scheduled at 2026-04-29 11:36:00.258198+00:00)
+2026-04-29 19:36:00 | INFO    | scheduler.scheduler | signal generation: 0 signals, 0 buys, 0 sells
+2026-04-29 19:36:00 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 11:51:00 UTC)" executed successfully
+2026-04-29 19:36:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:36:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:36:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:36:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:36:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:36:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:36:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:36:08 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:36:08 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:36:08 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:36:08 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:36:08 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:36:08 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:41:00 UTC)" executed successfully
+2026-04-29 19:41:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:46:00 UTC)" (scheduled at 2026-04-29 11:41:00.257334+00:00)
+2026-04-29 19:41:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:41:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:41:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:41:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:41:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:41:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:41:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:41:06 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:41:06 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:41:06 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:41:07 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:41:07 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:41:07 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:46:00 UTC)" executed successfully
+2026-04-29 19:46:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:51:00 UTC)" (scheduled at 2026-04-29 11:46:00.257334+00:00)
+2026-04-29 19:46:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:46:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:46:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:46:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:46:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:46:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:46:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:46:06 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:46:06 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:46:06 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:46:07 | INFO    | scheduler.scheduler | 信号检测完成: 生成 2 条预警
+2026-04-29 19:46:08 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:46:08 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - Test
+2026-04-29 19:46:09 | INFO    | httpx._client | HTTP Request: POST https://open.feishu.cn/open-apis/bot/v2/hook/86c421f8-950c-4574-bae3-6f6ef20cd9e9 "HTTP/1.1 200 OK"
+2026-04-29 19:46:09 | INFO    | notifiers.feishu_notifier | 飞书通知发送成功: rank_surge - Naluge
+2026-04-29 19:46:09 | INFO    | scheduler.scheduler | 飞书通知: 成功 2 / 总数 2
+2026-04-29 19:46:09 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:46:09 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:46:09 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:51:00 UTC)" executed successfully
+2026-04-29 19:51:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:56:00 UTC)" (scheduled at 2026-04-29 11:51:00.257334+00:00)
+2026-04-29 19:51:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 12:06:00 UTC)" (scheduled at 2026-04-29 11:51:00.258198+00:00)
+2026-04-29 19:51:00 | INFO    | scheduler.scheduler | signal generation: 0 signals, 0 buys, 0 sells
+2026-04-29 19:51:00 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-04-29 12:06:00 UTC)" executed successfully
+2026-04-29 19:51:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:51:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:51:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:51:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:51:03 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:51:04 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:51:07 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:51:07 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:51:07 | INFO    | scheduler.scheduler | 赛季过滤: 移除 214 个非当季 Agent (剩 63)
+2026-04-29 19:51:08 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:51:08 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:51:08 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 11:56:00 UTC)" executed successfully
+2026-04-29 19:56:00 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 12:01:00 UTC)" (scheduled at 2026-04-29 11:56:00.257334+00:00)
+2026-04-29 19:56:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-04-29 19:56:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-04-29 19:56:01 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-04-29 19:56:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-04-29 19:56:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-04-29 19:56:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-04-29 19:56:02 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-04-29 19:56:04 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-04-29 19:56:04 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-04-29 19:56:04 | INFO    | scheduler.scheduler | 赛季过滤: 移除 259 个非当季 Agent (剩 68)
+2026-04-29 19:56:05 | INFO    | scoring.engine | 评分完成: 68 个 Agent
+2026-04-29 19:56:05 | INFO    | scheduler.scheduler | 评分完成: 68 个 Agent
+2026-04-29 19:56:05 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-04-29 12:01:00 UTC)" executed successfully

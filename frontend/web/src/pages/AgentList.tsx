@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { fetchAgents } from '../api/client'
-import { Search, ExternalLink, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Search, ExternalLink, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 
 const labelColors: Record<string, string> = {
@@ -127,7 +127,7 @@ export default function AgentList() {
                     ) : <span className="text-gray-600">-</span>}
                   </td>
                   <td className={`py-2.5 px-4 text-right font-mono ${(s?.pnl_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {s ? `${s.pnl_24h >= 0 ? '+' : ''}${s.pnl_24h}%` : '-'}
+                    {s ? `${s.pnl_24h >= 0 ? '+' : ''}$${s.pnl_24h.toLocaleString()}` : '-'}
                   </td>
                   <td className={`py-2.5 px-4 text-right font-mono ${(s?.pnl_7d ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {s ? `${s.pnl_7d >= 0 ? '+' : ''}${s.pnl_7d}%` : '-'}

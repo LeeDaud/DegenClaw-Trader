@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from collectors.season_manager import SeasonManager
@@ -61,6 +63,12 @@ async def list_agents(
     enriched = []
     for agent in agents:
         snapshot = database.get_agent_latest_snapshot(agent["agent_id"])
+        # 计算 24h PnL：最新 total_realized_pnl 减去约 24h 前快照的值
+        if snapshot and snapshot.get("total_realized_pnl", 0) != 0:
+            before_24h = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+            old_snap = database.get_agent_snapshot_before(agent["agent_id"], before_24h)
+            if old_snap:
+                snapshot["pnl_24h"] = round(snapshot["total_realized_pnl"] - old_snap["total_realized_pnl"], 2)
         market = None
         if agent["token_address"]:
             market = database.get_latest_market_snapshot(agent["token_address"])
@@ -81,6 +89,13 @@ async def get_agent(agent_id: str, request: Request) -> dict[str, Any]:
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
     snapshots = database.get_agent_snapshots(agent_id, limit=100)
+    latest_snapshot = snapshots[0] if snapshots else None
+    # 计算 24h PnL
+    if latest_snapshot and latest_snapshot.get("total_realized_pnl", 0) != 0:
+        before_24h = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+        old_snap = database.get_agent_snapshot_before(agent_id, before_24h)
+        if old_snap:
+            latest_snapshot["pnl_24h"] = round(latest_snapshot["total_realized_pnl"] - old_snap["total_realized_pnl"], 2)
     market = None
     if agent["token_address"]:
         market_data = database.get_latest_market_snapshot(agent["token_address"])
@@ -89,6 +104,7 @@ async def get_agent(agent_id: str, request: Request) -> dict[str, Any]:
     scores = database.get_agent_score_history(agent_id, limit=50)
     return _api_ok({
         **agent,
+        "latest_snapshot": latest_snapshot,
         "snapshots": snapshots,
         "market": market,
         "scores": scores,

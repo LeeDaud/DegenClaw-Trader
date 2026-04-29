@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
 import { Briefcase, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react'
 
 const API_BASE = '/api/v1'
@@ -44,8 +43,6 @@ export default function Positions() {
   const positions = data?.positions || []
   const openPositions = positions.filter((p) => p.status === 'open')
   const closedPositions = positions.filter((p) => p.status === 'closed')
-
-  const pnl = (p: PositionData) => p.status === 'closed' ? p.realized_pnl : p.unrealized_pnl
 
   return (
     <div className="space-y-4">
