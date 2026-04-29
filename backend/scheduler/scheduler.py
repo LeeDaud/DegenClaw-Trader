@@ -167,11 +167,18 @@ async def run_signal_generation(database: Database, settings: Settings) -> dict[
     summary: dict[str, int] = {"signals": 0, "buys": 0, "sells": 0}
 
     try:
-        # 1. 获取最新评分
-        scores = database.list_agent_scores(limit=100)
-        if not scores:
+        # 1. 获取最新评分，去重后取前十名 Agent
+        all_scores = database.list_agent_scores(limit=200)
+        if not all_scores:
             logger.info("signal generation skipped: no scores")
             return summary
+        # 按 agent_id 去重保留最新一条，按总分排序取前十
+        seen: dict[str, dict] = {}
+        for s in all_scores:
+            aid = s["agent_id"]
+            if aid not in seen or s["scored_at"] > seen[aid]["scored_at"]:
+                seen[aid] = s
+        scores = sorted(seen.values(), key=lambda x: x["score_total"], reverse=True)[:10]
 
         # 2. 获取事件窗口
         window_mgr = EventWindowManager()
@@ -191,7 +198,7 @@ async def run_signal_generation(database: Database, settings: Settings) -> dict[
                 continue
         paper_trader.load_positions(loaded)
 
-        # 4. 对每个有评分的 Agent 生成信号
+        # 4. 对前十名 Agent 逐一生成信号
         for score in scores:
             agent_id = score["agent_id"]
             agent = database.get_agent(agent_id)
