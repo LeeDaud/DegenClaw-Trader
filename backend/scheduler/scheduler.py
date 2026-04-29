@@ -6,9 +6,11 @@ import logging
 from config.settings import Settings
 from db.database import Database
 from db.models import (
-    LeaderboardSnapshot, SystemEvent, Token, build_event_id, utc_now_iso,
+    Agent, AgentSnapshot, LeaderboardSnapshot, SystemEvent, Token,
+    build_event_id, utc_now_iso,
 )
 from collectors.degenclaw_collector import DegenClawCollector, MarketCollector, AIPotCollector
+from collectors.season_manager import SeasonManager
 from notifiers.feishu_notifier import FeishuNotifier
 from parsers.degenclaw_parser import DegenClawParser
 from scoring.engine import DegenClawScoreEngine
@@ -40,6 +42,25 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
         # 1. 采集 Agent 排行榜
         raw_agents = await degenclaw.fetch_leaderboard()
         agents, snapshots = parser.parse_leaderboard(raw_agents)
+
+        # 1a. 赛季过滤：只保留当前赛季的 Agent
+        season_mgr = SeasonManager()
+        current_season = await season_mgr.fetch_current_season()
+        if current_season:
+            before = len(agents)
+            filtered: list[Agent] = []
+            filtered_snaps: list[AgentSnapshot] = []
+            for agent, snap in zip(agents, snapshots):
+                if snap.last_trade_at and not current_season.contains(snap.last_trade_at):
+                    continue
+                filtered.append(agent)
+                filtered_snaps.append(snap)
+            agents, snapshots = filtered, filtered_snaps
+            removed = before - len(agents)
+            if removed:
+                logger.info("赛季过滤: 移除 %d 个非当季 Agent (剩 %d)", removed, len(agents))
+        else:
+            logger.info("未获取到赛季信息，不过滤")
 
         for agent in agents:
             database.upsert_agent(agent)
@@ -125,7 +146,13 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
         # 5. 运行评分
         try:
             score_engine = DegenClawScoreEngine(database)
-            score_results = score_engine.run_round()
+            if current_season:
+                score_results = score_engine.run_round(
+                    season_start=current_season.start_date,
+                    season_end=current_season.end_date,
+                )
+            else:
+                score_results = score_engine.run_round()
             for score in score_results:
                 database.insert_agent_score(score)
             summary["scored"] = len(score_results)

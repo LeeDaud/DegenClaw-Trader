@@ -4,19 +4,24 @@
 scoring:
 
   # AI Council 入选概率 (0-35)
+  # 核心信号：排名越高，入选概率越大
   council:
     rank_score:
       thresholds:
+        - max_rank: 3
+          score: 20
         - max_rank: 5
-          score: 15
+          score: 18
         - max_rank: 10
-          score: 12
+          score: 15
         - max_rank: 15
-          score: 8
+          score: 12
         - max_rank: 20
-          score: 4
+          score: 8
         - max_rank: 30
-          score: 2
+          score: 5
+        - max_rank: 50
+          score: 3
       default: 0
     history_selection:
       thresholds:
@@ -46,15 +51,26 @@ scoring:
     pnl:
       improvement_thresholds:
         - min_pct: 20
-          score: 8
-        - min_pct: 10
           score: 6
-        - min_pct: 5
+        - min_pct: 10
           score: 4
+        - min_pct: 5
+          score: 3
         - min_pct: -5
           score: 2
       default: 0
       single_snapshot_fallback: 2
+    win_rate:
+      thresholds:
+        - min_rate: 80
+          score: 6
+        - min_rate: 65
+          score: 4
+        - min_rate: 50
+          score: 2
+        - min_rate: 35
+          score: 1
+      default: 0
     drawdown:
       max_drawdown: -10
       high_score: 4
@@ -78,7 +94,7 @@ scoring:
           score: 1
       default: 0
     single_trade_penalty:
-      max_pnl_ratio: 0.5  # 单笔 PnL 占比超过此值触发扣分
+      max_pnl_ratio: 0.5
       penalty: -2
     max_total: 20
 
@@ -112,6 +128,7 @@ scoring:
 
   # Token 市场质量 (0-15)
   token_market:
+    has_token: 3  # 有 token 地址即给基础分
     liquidity:
       thresholds:
         - min_liquidity: 500000
@@ -160,7 +177,11 @@ scoring:
 
   # 注意力 (0-10)
   visibility:
+    rank_based:
+      max_rank: 10
+      score: 8
     default_score: 3
+    low_rank_score: 1
     max_total: 10
 
   # 风险扣分 (-20 ~ 0)

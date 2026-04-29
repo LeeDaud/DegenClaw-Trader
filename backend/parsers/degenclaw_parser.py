@@ -30,18 +30,21 @@ class DegenClawParser:
                 continue
 
             token_address = self._extract_token_address(item)
+            token_symbol = str(item.get("token_symbol") or item.get("tokenSymbol", ""))
             rank = int(item.get("rank", 0))
 
-            uid = item.get("uid", "")
-            profile_url = item.get("profile_url", "")
-            if not profile_url and uid:
-                profile_url = f"https://app.virtuals.io/agents/{uid}"
+            agent_id_raw = str(item.get("id") or "")
+            virtual_id = item.get("virtual_id") or item.get("virtualId")
+            profile_url = f"https://degen.virtuals.io/agents/{agent_id_raw}"
+            if virtual_id:
+                profile_url += f"?vid={virtual_id}"
 
             agent = Agent(
                 agent_id=agent_id,
                 name=name,
                 profile_url=profile_url,
                 token_address=token_address,
+                token_symbol=token_symbol,
                 chain="base",
                 created_at=now,
                 updated_at=now,
@@ -58,6 +61,7 @@ class DegenClawParser:
                 trade_count=int(item.get("trade_count", 0)),
                 is_top_10=bool(item.get("is_top_10", rank <= 10)),
                 is_selected=bool(item.get("is_selected", False)),
+                last_trade_at=str(item.get("last_trade_at", "")),
                 snapshot_at=now,
             )
             snapshots.append(snapshot)

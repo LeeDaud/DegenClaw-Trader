@@ -36,6 +36,7 @@ class Agent:
     name: str
     profile_url: str
     token_address: str
+    token_symbol: str
     chain: str
     created_at: str
     updated_at: str
@@ -50,6 +51,7 @@ class Agent:
             name=row["name"],
             profile_url=row["profile_url"],
             token_address=row["token_address"],
+            token_symbol=row.get("token_symbol", ""),
             chain=row["chain"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
@@ -67,7 +69,24 @@ class AgentSnapshot:
     trade_count: int
     is_top_10: bool
     is_selected: bool
+    last_trade_at: str
     snapshot_at: str
+
+    @classmethod
+    def from_row(cls, row: Any) -> AgentSnapshot:
+        return cls(
+            agent_id=row["agent_id"],
+            rank=row["rank"],
+            pnl_24h=row["pnl_24h"],
+            pnl_7d=row["pnl_7d"],
+            win_rate=row["win_rate"],
+            max_drawdown=row["max_drawdown"],
+            trade_count=row["trade_count"],
+            is_top_10=bool(row["is_top_10"]),
+            is_selected=bool(row["is_selected"]),
+            last_trade_at=row.get("last_trade_at", ""),
+            snapshot_at=row["snapshot_at"],
+        )
 
     def as_record(self) -> dict[str, Any]:
         return asdict(self)

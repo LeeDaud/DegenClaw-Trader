@@ -31,6 +31,7 @@ export interface Agent {
   name: string
   profile_url: string
   token_address: string
+  token_symbol: string
   chain: string
   created_at: string
   updated_at: string

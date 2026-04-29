@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
+from collectors.season_manager import SeasonManager
 from db.database import Database
 from db.models import utc_now_iso
 from notifiers.feishu_notifier import FeishuNotifier
@@ -46,7 +47,17 @@ async def list_agents(
     offset: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     database = get_database(request)
-    agents = database.list_agents(limit=limit, offset=offset)
+    season_mgr = SeasonManager()
+    current_season = await season_mgr.fetch_current_season()
+    if current_season:
+        agents = database.list_agents(limit=limit, offset=offset,
+                                      season_start=current_season.start_date,
+                                      season_end=current_season.end_date)
+        total = database.count_agents(season_start=current_season.start_date,
+                                      season_end=current_season.end_date)
+    else:
+        agents = database.list_agents(limit=limit, offset=offset)
+        total = database.count_agents()
     enriched = []
     for agent in agents:
         snapshot = database.get_agent_latest_snapshot(agent["agent_id"])
@@ -60,7 +71,7 @@ async def list_agents(
             "latest_market": market,
             "latest_score": latest_score[0] if latest_score else None,
         })
-    return _api_ok({"agents": enriched, "total": database.count_agents()})
+    return _api_ok({"agents": enriched, "total": total})
 
 
 @router.get("/agents/{agent_id}")
@@ -233,8 +244,15 @@ async def get_agent_scores(
 async def trigger_score_scan(request: Request) -> dict[str, Any]:
     """手动触发一轮评分"""
     database = get_database(request)
-    engine = DegenClawScoreEngine(database)
-    results = engine.run_round()
+    season_mgr = SeasonManager()
+    current_season = await season_mgr.fetch_current_season()
+    if current_season:
+        engine = DegenClawScoreEngine(database)
+        results = engine.run_round(season_start=current_season.start_date,
+                                   season_end=current_season.end_date)
+    else:
+        engine = DegenClawScoreEngine(database)
+        results = engine.run_round()
     for score in results:
         database.insert_agent_score(score)
     return _api_ok({"scored": len(results)})

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS agents (
     name TEXT NOT NULL,
     profile_url TEXT NOT NULL DEFAULT '',
     token_address TEXT NOT NULL DEFAULT '',
+    token_symbol TEXT NOT NULL DEFAULT '',
     chain TEXT NOT NULL DEFAULT 'base',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS agent_snapshots (
     trade_count INTEGER NOT NULL DEFAULT 0,
     is_top_10 INTEGER NOT NULL DEFAULT 0,
     is_selected INTEGER NOT NULL DEFAULT 0,
+    last_trade_at TEXT NOT NULL DEFAULT '',
     snapshot_at TEXT NOT NULL
 );
 
@@ -210,13 +212,18 @@ class Database:
         with self._connect() as conn:
             conn.executescript(TABLES_SQL)
             conn.executescript(INDEXES_SQL)
-            # 迁移：添加 grade 和 reason 列（兼容已有数据库）
+            # 迁移：兼容已有数据库
+            for col in ["grade", "reason"]:
+                try:
+                    conn.execute(f"ALTER TABLE agent_scores ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
+                except sqlite3.OperationalError:
+                    pass
             try:
-                conn.execute("ALTER TABLE agent_scores ADD COLUMN grade TEXT NOT NULL DEFAULT ''")
+                conn.execute("ALTER TABLE agents ADD COLUMN token_symbol TEXT NOT NULL DEFAULT ''")
             except sqlite3.OperationalError:
                 pass
             try:
-                conn.execute("ALTER TABLE agent_scores ADD COLUMN reason TEXT NOT NULL DEFAULT ''")
+                conn.execute("ALTER TABLE agent_snapshots ADD COLUMN last_trade_at TEXT NOT NULL DEFAULT ''")
             except sqlite3.OperationalError:
                 pass
             conn.commit()
@@ -227,26 +234,51 @@ class Database:
         with self._connect() as conn:
             conn.execute(
                 """
-                INSERT INTO agents(agent_id, name, profile_url, token_address, chain, created_at, updated_at)
-                VALUES(?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO agents(agent_id, name, profile_url, token_address, token_symbol, chain, created_at, updated_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(agent_id) DO UPDATE SET
                     name = excluded.name,
                     profile_url = excluded.profile_url,
                     token_address = excluded.token_address,
+                    token_symbol = excluded.token_symbol,
                     chain = excluded.chain,
                     updated_at = excluded.updated_at
                 """,
                 (agent.agent_id, agent.name, agent.profile_url, agent.token_address,
-                 agent.chain, agent.created_at, agent.updated_at),
+                 agent.token_symbol, agent.chain, agent.created_at, agent.updated_at),
             )
             conn.commit()
 
-    def list_agents(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+    def list_agents(self, limit: int = 50, offset: int = 0,
+                    season_start: str | None = None, season_end: str | None = None) -> list[dict[str, Any]]:
         with self._connect() as conn:
-            rows = conn.execute(
-                "SELECT * FROM agents ORDER BY agent_id LIMIT ? OFFSET ?",
-                (limit, offset),
-            ).fetchall()
+            if season_start and season_end:
+                rows = conn.execute(
+                    """SELECT a.* FROM agents a
+                        INNER JOIN (
+                            SELECT agent_id, rank, last_trade_at, ROW_NUMBER() OVER (
+                                PARTITION BY agent_id ORDER BY snapshot_at DESC
+                            ) rn FROM agent_snapshots
+                        ) s ON a.agent_id = s.agent_id AND s.rn = 1
+                        WHERE s.last_trade_at != ''
+                          AND s.last_trade_at >= ?
+                          AND s.last_trade_at <= ?
+                        ORDER BY COALESCE(s.rank, 999999) ASC
+                        LIMIT ? OFFSET ?""",
+                    (season_start, season_end, limit, offset),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """SELECT a.* FROM agents a
+                        LEFT JOIN (
+                            SELECT agent_id, rank, ROW_NUMBER() OVER (
+                                PARTITION BY agent_id ORDER BY snapshot_at DESC
+                            ) rn FROM agent_snapshots
+                        ) s ON a.agent_id = s.agent_id AND s.rn = 1
+                        ORDER BY COALESCE(s.rank, 999999) ASC
+                        LIMIT ? OFFSET ?""",
+                    (limit, offset),
+                ).fetchall()
         return [dict(r) for r in rows]
 
     def get_agent(self, agent_id: str) -> dict[str, Any] | None:
@@ -254,8 +286,21 @@ class Database:
             row = conn.execute("SELECT * FROM agents WHERE agent_id = ?", (agent_id,)).fetchone()
         return dict(row) if row else None
 
-    def count_agents(self) -> int:
+    def count_agents(self, season_start: str | None = None, season_end: str | None = None) -> int:
         with self._connect() as conn:
+            if season_start and season_end:
+                return conn.execute(
+                    """SELECT COUNT(*) FROM agents a
+                        INNER JOIN (
+                            SELECT agent_id, last_trade_at, ROW_NUMBER() OVER (
+                                PARTITION BY agent_id ORDER BY snapshot_at DESC
+                            ) rn FROM agent_snapshots
+                        ) s ON a.agent_id = s.agent_id AND s.rn = 1
+                        WHERE s.last_trade_at != ''
+                          AND s.last_trade_at >= ?
+                          AND s.last_trade_at <= ?""",
+                    (season_start, season_end),
+                ).fetchone()[0]
             return conn.execute("SELECT COUNT(*) FROM agents").fetchone()[0]
 
     # --- Agent Snapshot ---
@@ -265,12 +310,12 @@ class Database:
             conn.executemany(
                 """
                 INSERT INTO agent_snapshots(agent_id, rank, pnl_24h, pnl_7d, win_rate, max_drawdown,
-                                            trade_count, is_top_10, is_selected, snapshot_at)
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                            trade_count, is_top_10, is_selected, last_trade_at, snapshot_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
                     (s.agent_id, s.rank, s.pnl_24h, s.pnl_7d, s.win_rate, s.max_drawdown,
-                     s.trade_count, int(s.is_top_10), int(s.is_selected), s.snapshot_at)
+                     s.trade_count, int(s.is_top_10), int(s.is_selected), s.last_trade_at, s.snapshot_at)
                     for s in snapshots
                 ],
             )

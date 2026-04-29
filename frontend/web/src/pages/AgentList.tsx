@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { fetchAgents } from '../api/client'
-import { Search } from 'lucide-react'
+import { Search, ExternalLink, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { useState } from 'react'
 
 const labelColors: Record<string, string> = {
@@ -26,16 +26,16 @@ export default function AgentList() {
   const [search, setSearch] = useState('')
   const { data, isLoading } = useQuery({
     queryKey: ['agents'],
-    queryFn: () => fetchAgents(50),
+    queryFn: () => fetchAgents(200),
     refetchInterval: 60_000,
   })
 
   const agents = (data?.agents || [])
     .filter((a) => a.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
-      const sa = a.latest_score?.score_total ?? 0
-      const sb = b.latest_score?.score_total ?? 0
-      return sb - sa
+      const ra = a.latest_snapshot?.rank ?? 9999
+      const rb = b.latest_snapshot?.rank ?? 9999
+      return ra - rb
     })
 
   if (isLoading) {
@@ -62,31 +62,52 @@ export default function AgentList() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-gray-400 border-b border-gray-800 bg-gray-900/50">
-              <th className="text-left py-3 px-4">Rank</th>
+              <th className="text-left py-3 px-4">#</th>
               <th className="text-left py-3 px-4">Agent</th>
+              <th className="text-left py-3 px-4">Token</th>
               <th className="text-right py-3 px-4">Score</th>
               <th className="text-center py-3 px-4">Grade</th>
               <th className="text-center py-3 px-4">Label</th>
               <th className="text-right py-3 px-4">24h PnL</th>
               <th className="text-right py-3 px-4">7d PnL</th>
               <th className="text-right py-3 px-4">Win Rate</th>
-              <th className="text-right py-3 px-4">Drawdown</th>
               <th className="text-right py-3 px-4">Trades</th>
-              <th className="text-center py-3 px-4">Top 10</th>
-              <th className="text-center py-3 px-4">AI Pot</th>
+              <th className="text-center py-3 px-4">Trend</th>
             </tr>
           </thead>
           <tbody>
             {agents.map((agent) => {
               const s = agent.latest_snapshot
               const sc = agent.latest_score
+              const isTop10 = (s?.rank ?? 999) <= 10
+              // Rank change: negative means rank improved (lower number = better)
               return (
                 <tr key={agent.agent_id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                  <td className="py-2.5 px-4 text-gray-400 font-mono">{s?.rank || '-'}</td>
                   <td className="py-2.5 px-4">
-                    <Link to={`/agents/${agent.agent_id}`} className="font-medium hover:text-emerald-400 transition-colors">
-                      {agent.name}
-                    </Link>
+                    <span className={`font-mono ${isTop10 ? 'text-emerald-400 font-bold' : 'text-gray-400'}`}>
+                      {s?.rank || '-'}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-4">
+                    <div className="flex items-center gap-2">
+                      <Link to={`/agents/${agent.agent_id}`} className="font-medium hover:text-emerald-400 transition-colors">
+                        {agent.name}
+                      </Link>
+                      <a
+                        href={agent.profile_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-500 hover:text-emerald-400 transition-colors"
+                        title="View on DegenClaw"
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4">
+                    <span className="font-mono text-xs text-gray-400">
+                      {agent.token_symbol || (agent.token_address ? `${agent.token_address.slice(0, 6)}...` : '-')}
+                    </span>
                   </td>
                   <td className="py-2.5 px-4 text-right font-mono">
                     {sc ? (
@@ -112,13 +133,15 @@ export default function AgentList() {
                     {s ? `${s.pnl_7d >= 0 ? '+' : ''}${s.pnl_7d}%` : '-'}
                   </td>
                   <td className="py-2.5 px-4 text-right text-gray-300">{s?.win_rate ?? '-'}%</td>
-                  <td className="py-2.5 px-4 text-right text-red-400">{s?.max_drawdown ?? '-'}%</td>
                   <td className="py-2.5 px-4 text-right text-gray-300">{s?.trade_count ?? '-'}</td>
                   <td className="py-2.5 px-4 text-center">
-                    {s?.is_top_10 ? <span className="text-emerald-400">●</span> : <span className="text-gray-600">○</span>}
-                  </td>
-                  <td className="py-2.5 px-4 text-center">
-                    {s?.is_selected ? <span className="text-emerald-400">●</span> : <span className="text-gray-600">○</span>}
+                    {isTop10 ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-400 text-xs">
+                        <TrendingUp size={14} /> Top 10
+                      </span>
+                    ) : (
+                      <span className="text-gray-600 text-xs">-</span>
+                    )}
                   </td>
                 </tr>
               )

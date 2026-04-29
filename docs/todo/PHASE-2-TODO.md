@@ -22,7 +22,7 @@
 - [x] 实现 pnl_improvement() — 7d PnL 改善评分（0-8）
 - [x] 实现 drawdown_score() — 回撤评分（0-4）
 - [x] 实现 trade_frequency_stability() — 交易频率稳定性（0-4）
-- [ ] 实现 single_trade_dependency_penalty() — 单笔暴赚扣分（-4-0）*
+- [x] 实现 single_trade_dependency_penalty() — 单笔暴赚扣分（-4-0）*
 - [x] 整合为 trading_performance_score
 
 ## 4. 排名趋势评分 (0-15 分)
@@ -60,14 +60,14 @@
 - [x] 实现 label generation（hot_candidate / candidate / high_watch / watch / ignore / risk_alert）
 - [x] 实现 grade 计算（A/B/C/D/E/F）
 - [ ] 实现 recommended_action 映射 *
-- [ ] 实现 reasons 和 risk_warnings 文本生成 *
+- [x] 实现 reasons 和 risk_warnings 文本生成 *
 
 ## 9. 评分配置
 
-- [ ] 创建 `config/scoring.yaml` 配置文件 *
-- [ ] 配置各维度权重
-- [ ] 配置评分阈值参数（排名、流动性、滑点等）
-- [ ] 配置风控参数（价格异常阈值、持有人集中度等）
+- [x] 创建 `config/scoring.yaml` 配置文件 *
+- [x] 配置各维度权重
+- [x] 配置评分阈值参数（排名、流动性、滑点等）
+- [x] 配置风控参数（价格异常阈值、持有人集中度等）
 
 ## 10. 数据库适配
 
@@ -82,15 +82,15 @@
 
 ## 12. 前端更新
 
-- [ ] Agent Leaderboard 增加评分列（score_total + 标签）*
+- [x] Agent Leaderboard 增加评分列（score_total + 标签）*
 - [ ] Agent Detail 增加评分拆解（各维度柱状图 + 雷达图）*
 - [ ] 评分趋势图（time series chart）*
-- [ ] Agent 列表支持按评分排序（默认降序）*
+- [x] Agent 列表支持按评分排序（默认降序）*
 
 ## 验收标准
 
 - [x] 系统可以定时自动更新评分
-- [ ] 所有评分因子可通过配置文件调整 *
+- [x] 所有评分因子可通过配置文件调整 *
 - [x] 每个 Agent 都能看到完整的评分拆解（API 返回各维度分数）
 - [x] 评分记录完整保存在 agent_scores 表
 - [x] 当某维度数据缺失时，评分能优雅降级

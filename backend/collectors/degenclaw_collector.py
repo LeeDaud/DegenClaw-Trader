@@ -30,6 +30,7 @@ def _normalize_degenclaw_item(item: dict[str, Any], rank: int) -> dict[str, Any]
         "total_realized_pnl": float(perf.get("totalRealizedPnl", 0) or 0),
         "holdings_value_usd": float(perf.get("holdingsValueUsd", 0) or 0),
         "total_trade_volume": float(perf.get("totalTradeVolume", 0) or 0),
+        "last_trade_at": perf.get("lastTradeAt", ""),
         "is_top_10": rank <= 10,
         "is_selected": False,
     }

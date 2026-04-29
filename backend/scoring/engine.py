@@ -17,15 +17,15 @@ def _clamp(value: int, lo: int = 0, hi: int = 100) -> int:
 
 
 def _compute_grade(total: int) -> str:
-    if total >= 80:
+    if total >= 70:
         return "A"
-    if total >= 65:
+    if total >= 55:
         return "B"
-    if total >= 50:
+    if total >= 40:
         return "C"
-    if total >= 35:
+    if total >= 25:
         return "D"
-    if total >= 20:
+    if total >= 15:
         return "E"
     return "F"
 
@@ -33,13 +33,13 @@ def _compute_grade(total: int) -> str:
 def _determine_label(total: int, risk_penalty: int) -> str:
     if risk_penalty <= -5:
         return "risk_alert"
-    if total >= 80:
-        return "hot_candidate"
     if total >= 70:
+        return "hot_candidate"
+    if total >= 55:
         return "candidate"
-    if total >= 60:
+    if total >= 40:
         return "high_watch"
-    if total >= 50:
+    if total >= 25:
         return "watch"
     return "ignore"
 
@@ -76,9 +76,9 @@ class DegenClawScoreEngine:
 
     # ---- 公开方法 ----
 
-    def run_round(self) -> list[AgentScore]:
+    def run_round(self, season_start: str | None = None, season_end: str | None = None) -> list[AgentScore]:
         """对所有 Agent 执行一轮评分"""
-        agents = self.database.list_agents(limit=500)
+        agents = self.database.list_agents(limit=500, season_start=season_start, season_end=season_end)
         now = utc_now_iso()
         results: list[AgentScore] = []
 
@@ -112,8 +112,8 @@ class DegenClawScoreEngine:
         council, council_reasons = self._council_prob(snapshots)
         trading, trading_reasons = self._trading_perf(snapshots)
         rank, rank_reasons = self._rank_trend(snapshots)
-        token_market, market_reasons = self._token_market(market)
-        visibility = self._visibility()
+        token_market, market_reasons = self._token_market(market, agent.get("token_address", ""))
+        visibility = self._visibility(snapshots)
         risk = self._risk_penalty(market)
         risk_reasons = self._risk_reasons(market)
 
@@ -259,6 +259,16 @@ class DegenClawScoreEngine:
         if freq_score > 0:
             reasons.append(f"交易{trade_count}次")
 
+        # 胜率评分 (0-6)
+        win_rate = latest.get("win_rate", 0)
+        wr_score = 0
+        for t in cfg.get("win_rate", {}).get("thresholds", []):
+            if win_rate >= t.get("min_rate", 0):
+                wr_score = t.get("score", 0)
+                break
+        if wr_score > 0:
+            reasons.append(f"胜率{win_rate:.0f}%")
+
         # 单笔暴赚扣分 (-2 ~ 0)
         penalty_cfg = cfg.get("single_trade_penalty", {})
         penalty = 0
@@ -270,7 +280,7 @@ class DegenClawScoreEngine:
                 penalty = penalty_cfg.get("penalty", -2)
                 reasons.append("单笔仓位集中")
 
-        total = _clamp(pnl_score + d_score + freq_score + penalty, 0, cfg.get("max_total", 20))
+        total = _clamp(pnl_score + d_score + freq_score + wr_score + penalty, 0, cfg.get("max_total", 20))
         return total, reasons
 
     # ---- 排名趋势 (0-15) ----
@@ -338,13 +348,19 @@ class DegenClawScoreEngine:
 
     # ---- Token 市场质量 (0-15) ----
 
-    def _token_market(self, market: dict[str, Any] | None) -> tuple[int, list[str]]:
+    def _token_market(self, market: dict[str, Any] | None, token_address: str = "") -> tuple[int, list[str]]:
         """Token 市场质量 (0-15)"""
         reasons: list[str] = []
-        if not market:
-            return 0, reasons
-
         cfg = self.cfg.get("token_market", {})
+
+        # 有 token 地址即给基础分
+        has_token_score = 0
+        if token_address:
+            has_token_score = cfg.get("has_token", 3)
+            reasons.append("有Token")
+
+        if not market:
+            return _clamp(has_token_score, 0, cfg.get("max_total", 15)), reasons
         liquidity = market.get("liquidity_usd", 0) or 0
         volume_24h = market.get("volume_24h", 0) or 0
         buy_slippage = market.get("buy_slippage", 0) or 0
@@ -390,13 +406,20 @@ class DegenClawScoreEngine:
                     holder_score = t.get("score", 0)
                     break
 
-        return _clamp(liq_score + vol_score + slip_score + holder_score, 0, cfg.get("max_total", 15)), reasons
+        return _clamp(has_token_score + liq_score + vol_score + slip_score + holder_score, 0, cfg.get("max_total", 15)), reasons
 
     # ---- 注意力 (0-10) ----
 
-    def _visibility(self) -> int:
-        """注意力与可见度 (0-10) — 预留默认值"""
-        return self.cfg.get("visibility", {}).get("default_score", 3)
+    def _visibility(self, snapshots: list[dict[str, Any]]) -> int:
+        """注意力与可见度 (0-10) — 根据排名调整"""
+        cfg = self.cfg.get("visibility", {})
+        if snapshots:
+            rank = snapshots[0].get("rank", 999)
+            rank_cfg = cfg.get("rank_based", {})
+            if rank <= rank_cfg.get("max_rank", 10):
+                return rank_cfg.get("score", 8)
+            return cfg.get("low_rank_score", 1)
+        return cfg.get("default_score", 3)
 
     # ---- 风险扣分 (-20 ~ 0) ----
 
