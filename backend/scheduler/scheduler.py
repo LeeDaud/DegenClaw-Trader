@@ -58,7 +58,11 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
             agents, snapshots = filtered, filtered_snaps
             removed = before - len(agents)
             if removed:
-                logger.info("赛季过滤: 移除 %d 个非当季 Agent (剩 %d)", removed, len(agents))
+                # 过滤后重新分配排名 (去掉空缺)
+                for i, snap in enumerate(filtered_snaps, start=1):
+                    snap.rank = i
+                    snap.is_top_10 = i <= 10
+                logger.info("赛季过滤: 移除 %d 个非当季 Agent (剩 %d)，排名已重分配", removed, len(agents))
         else:
             logger.info("未获取到赛季信息，不过滤")
 

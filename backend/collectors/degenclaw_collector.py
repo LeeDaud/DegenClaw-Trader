@@ -10,9 +10,11 @@ from config.settings import Settings
 from db.models import utc_now_iso
 
 
-def _normalize_degenclaw_item(item: dict[str, Any], rank: int) -> dict[str, Any]:
+def _normalize_degenclaw_item(item: dict[str, Any], position: int) -> dict[str, Any]:
     """DegenClaw leaderboard API → 内部字段映射"""
     perf = item.get("performance") or {}
+    # 优先用 API 返回的 rank 字段，没有则用位置索引
+    rank = int(item["rank"]) if "rank" in item else position
     return {
         "id": str(item.get("id", "")),
         "name": item.get("name", ""),
@@ -77,10 +79,10 @@ class DegenClawCollector:
         if not all_items:
             return []
 
-        # 已按排名排序（API 返回顺序即为排名），分配 rank
+        # API 按 returnPct 降序返回，用数组位置作为排名兜底
         normalized = []
-        for idx, item in enumerate(all_items, start=1):
-            normalized.append(_normalize_degenclaw_item(item, idx))
+        for pos, item in enumerate(all_items, start=1):
+            normalized.append(_normalize_degenclaw_item(item, pos))
 
         return normalized
 
