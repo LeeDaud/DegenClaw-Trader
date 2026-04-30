@@ -18,8 +18,10 @@ SIGNAL_THRESHOLDS = {
     "volume_spike_ratio": 3.0,  # 成交量增长倍数
     "price_surge_min_1h": 10.0,  # 1h 涨幅
     "price_dump_max_1h": -8.0,  # 1h 跌幅
-    "combined_surge_score": 35,  # 综合看涨信号分（原 25，提高减少误报）
-    "combined_dump_score": 35,  # 综合看跌信号分（原 25）
+    "wr_surge_min": 8.0,        # 胜率提升超过 8pp（百分点）
+    "wr_dump_max": -8.0,        # 胜率下降超过 8pp
+    "combined_surge_score": 35,  # 综合看涨信号分
+    "combined_dump_score": 35,  # 综合看跌信号分
 }
 
 # 同一 Agent 同一类型预警冷却时间（秒）
@@ -117,13 +119,15 @@ class SignalEngine:
             "volume_spike": "成交量异常",
             "price_surge": "价格暴涨",
             "price_dump": "价格暴跌",
+            "wr_surge": "胜率飙升",
+            "wr_dump": "胜率暴跌",
             "combined_surge": "综合看涨",
             "combined_dump": "综合看跌",
         }
 
         # 一级策略：按 signals 的方向（看涨/看跌/中性）分成最多两组
-        bullish = [s for s in signals if s["type"] in ("surge", "rank_surge", "price_surge", "combined_surge")]
-        bearish = [s for s in signals if s["type"] in ("dump", "rank_dump", "price_dump", "combined_dump")]
+        bullish = [s for s in signals if s["type"] in ("surge", "rank_surge", "price_surge", "combined_surge", "wr_surge")]
+        bearish = [s for s in signals if s["type"] in ("dump", "rank_dump", "price_dump", "combined_dump", "wr_dump")]
         neutral = [s for s in signals if s["type"] == "volume_spike"]
 
         parts: list[str] = []
@@ -283,25 +287,59 @@ class SignalEngine:
                     "score": abs(price_change_1h) * 1.5,
                 })
 
-        # === 6. 综合看涨：多项正面信号叠加 ===
+        # === win_rate 趋势分析（多快照）===
+        wr_surge_min = SIGNAL_THRESHOLDS.get("wr_surge_min", 8.0)
+        wr_dump_max = SIGNAL_THRESHOLDS.get("wr_dump_max", -8.0)
+
+        # 跨 3 个快照的 win_rate 趋势
+        wr_total_change: float = win_rate - prev_win_rate
+        wr_trend_detail = f"{prev_win_rate}%→{win_rate}%"
+        if len(snapshots) >= 3:
+            oldest_wr = float(snapshots[2].get("win_rate", 0) or 0)
+            wr_total_change = win_rate - oldest_wr
+            wr_trend_detail = f"{oldest_wr}%→{prev_win_rate}%→{win_rate}%"
+
+        # 独立胜率信号（幅度超过阈值时触发）
+        if win_rate > 0 and wr_total_change >= wr_surge_min:
+            signals.append({
+                "type": "wr_surge",
+                "severity": "high" if wr_total_change >= 15 else "medium",
+                "title": f"{agent_name} 胜率显著提升",
+                "detail": f"胜率趋势 {wr_trend_detail}（↑{wr_total_change:.1f}pp）",
+                "score": min(wr_total_change * 2, 30),
+            })
+        elif win_rate > 0 and wr_total_change <= wr_dump_max:
+            signals.append({
+                "type": "wr_dump",
+                "severity": "high" if wr_total_change <= -15 else "medium",
+                "title": f"{agent_name} 胜率显著下滑",
+                "detail": f"胜率趋势 {wr_trend_detail}（↓{abs(wr_total_change):.1f}pp）",
+                "score": min(abs(wr_total_change) * 2, 30),
+            })
+
+        # === 6. 综合看涨：win_rate 为主，排名其次 ===
         combined_up = 0
         combined_up_reasons: list[str] = []
-        if rank_change < 0:
-            combined_up += abs(rank_change) * 2
-            combined_up_reasons.append(f"排名↑{abs(rank_change)}")
+
+        # win_rate 变化（主信号，最高 20 分）
+        if wr_total_change > 0:
+            wr_pts = min(wr_total_change * 2, 20)
+            combined_up += wr_pts
+            combined_up_reasons.append(f"胜率↑{wr_total_change:.1f}pp")
+
         if pnl_7d > prev_pnl_7d:
             combined_up += 5
             combined_up_reasons.append(f"7d PnL 改善 ({prev_pnl_7d:+.1f}→{pnl_7d:+.1f})")
-        if win_rate > prev_win_rate:
-            combined_up += 3
-            combined_up_reasons.append(f"胜率上升 ({prev_win_rate}%→{win_rate}%)")
+        if rank_change < 0:
+            combined_up += abs(rank_change) * 1.5
+            combined_up_reasons.append(f"排名↑{abs(rank_change)}")
         if pnl_24h > 5:
             combined_up += 5
             combined_up_reasons.append(f"24h PnL 强劲 (+{pnl_24h}%)")
         if market:
             if float(market.get("price_change_24h", 0) or 0) > 10:
-                combined_up += 5
-                combined_up_reasons.append("Token 价格趋势向好")
+                combined_up += 3
+                combined_up_reasons.append("Token 价格向好")
             if float(market.get("volume_24h", 0) or 0) > 0:
                 combined_up += 2
 
@@ -314,18 +352,22 @@ class SignalEngine:
                 "score": combined_up,
             })
 
-        # === 7. 综合看跌：多项负面信号叠加 ===
+        # === 7. 综合看跌：win_rate 为主，排名其次 ===
         combined_down = 0
         combined_down_reasons: list[str] = []
-        if rank_change > 0:
-            combined_down += rank_change * 2
-            combined_down_reasons.append(f"排名↓{rank_change}")
+
+        # win_rate 变化（主信号，最高 20 分）
+        if wr_total_change < 0:
+            wr_pts = min(abs(wr_total_change) * 2, 20)
+            combined_down += wr_pts
+            combined_down_reasons.append(f"胜率↓{abs(wr_total_change):.1f}pp")
+
         if pnl_7d < prev_pnl_7d:
             combined_down += 5
             combined_down_reasons.append(f"7d PnL 恶化 ({prev_pnl_7d:+.1f}→{pnl_7d:+.1f})")
-        if win_rate < prev_win_rate:
-            combined_down += 3
-            combined_down_reasons.append(f"胜率下降 ({prev_win_rate}%→{win_rate}%)")
+        if rank_change > 0:
+            combined_down += rank_change * 1.5
+            combined_down_reasons.append(f"排名↓{rank_change}")
         if pnl_24h < -3:
             combined_down += 5
             combined_down_reasons.append(f"24h PnL 为负 ({pnl_24h}%)")
@@ -334,7 +376,7 @@ class SignalEngine:
             combined_down_reasons.append(f"回撤过大 ({drawdown}%)")
         if market:
             if float(market.get("price_change_24h", 0) or 0) < -5:
-                combined_down += 5
+                combined_down += 3
                 combined_down_reasons.append("Token 价格走弱")
 
         if combined_down >= SIGNAL_THRESHOLDS["combined_dump_score"]:

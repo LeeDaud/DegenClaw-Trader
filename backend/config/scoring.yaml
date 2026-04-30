@@ -98,32 +98,51 @@ scoring:
       penalty: -2
     max_total: 20
 
-  # 排名趋势 (0-15)
-  rank_trend:
-    change_1h:
+  # 策略质量趋势 (0-15)
+  # 核心：Agent 的投资能力趋势 = win_rate 改善 + 收益累积质量 + 排名佐证
+  strategy_trend:
+    win_rate:
+      lookback: 5
       thresholds:
-        - min_change: 5
+        - min_improvement: 15
+          score: 7
+        - min_improvement: 10
+          score: 6
+        - min_improvement: 5
           score: 5
-        - min_change: 3
+        - min_improvement: 2
           score: 4
-        - min_change: 1
+        - min_improvement: -2
           score: 2
-      default: 0
-    change_24h:
-      thresholds:
-        - min_change: 10
-          score: 5
-        - min_change: 5
-          score: 4
-        - min_change: 3
-          score: 3
-        - min_change: 1
+        - min_improvement: -10
           score: 1
-      default: 0
-    threshold_boost:
-      cross_20_to_15: 3
-      cross_15_to_10: 2
-    top10_drop_penalty: -2
+      consistent_bonus: 2
+    pnl_quality:
+      lookback: 5
+      positive_ratio:
+        - min_ratio: 0.8
+          score: 4
+        - min_ratio: 0.6
+          score: 3
+        - min_ratio: 0.4
+          score: 2
+        - min_ratio: 0.2
+          score: 1
+    realized_pnl_growth:
+      lookback: 3
+      thresholds:
+        - min_growth: 50
+          score: 3
+        - min_growth: 20
+          score: 2
+        - min_growth: 0
+          score: 1
+    rank_momentum:
+      thresholds:
+        - min_change: 5
+          score: 2
+        - min_change: 2
+          score: 1
     max_total: 15
 
   # Token 市场质量 (0-15)

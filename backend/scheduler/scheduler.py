@@ -248,6 +248,17 @@ async def run_signal_generation(database: Database, settings: Settings) -> dict[
             rank_change_1h = rank_prev - (latest_snap.get("rank", 0) or 0)
             rank_change_24h = rank_oldest - (latest_snap.get("rank", 0) or 0)
 
+            # win_rate 趋势：跨多快照计算
+            latest_wr = float(latest_snap.get("win_rate", 0) or 0)
+            if len(snapshots) >= 3:
+                old_wr = float(snapshots[-1].get("win_rate", 0) or 0)
+                win_rate_change = latest_wr - old_wr
+            elif len(snapshots) >= 2:
+                prev_wr = float(snapshots[1].get("win_rate", 0) or 0)
+                win_rate_change = latest_wr - prev_wr
+            else:
+                win_rate_change = 0.0
+
             # 检查是否有持仓
             token_positions = [p for p in paper_trader.get_open_positions() if p.agent_id == agent_id]
             has_position = len(token_positions) > 0
@@ -275,6 +286,8 @@ async def run_signal_generation(database: Database, settings: Settings) -> dict[
                 buy_slippage=float(market.get("buy_slippage", 0)) if market else 0,
                 has_position=has_position,
                 position_pnl_pct=pos_pnl,
+                win_rate=latest_wr,
+                win_rate_change=win_rate_change,
             )
 
             signal = engine.decide(inp, window)

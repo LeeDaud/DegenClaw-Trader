@@ -67,6 +67,10 @@ class DecisionInput:
     position_entry_price: float = 0.0
     position_pnl_pct: float = 0.0
 
+    # 策略质量指标
+    win_rate: float = 0.0
+    win_rate_change: float = 0.0  # 多快照趋势变动（百分点）
+
     # 额外数据（透传用）
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -215,13 +219,19 @@ class TradingDecisionEngine:
                     risk_checks,
                 )
 
-            # 评分下降 / 排名恶化 → reduce
+            # 评分下降 / 排名恶化 / 策略恶化 → reduce
+            reduce_triggers: list[str] = []
             if inp.rank_change_24h < -5 and inp.risk_penalty <= -5:
+                reduce_triggers.append("排名恶化")
+            if inp.win_rate_change < -5:
+                reduce_triggers.append("胜率下滑")
+
+            if len(reduce_triggers) >= 1:
                 return self._make_signal(
                     inp, window, signal_id, created_at,
                     ACTION_REDUCE, CONFIDENCE_MEDIUM,
-                    "排名恶化 + 高风险，建议减仓",
-                    ["rank_deteriorated", "high_risk"],
+                    f"{'+'.join(reduce_triggers)}，建议减仓",
+                    reduce_triggers + ["high_risk"],
                     risk_checks,
                 )
 
@@ -235,10 +245,12 @@ class TradingDecisionEngine:
             )
 
         # Step 4: probe_buy 条件检查
+        # 核心：评分优质 + 排名合适 + win_rate 趋势向好
         if (
             inp.score_total >= 75
             and 11 <= inp.rank <= 25
             and inp.rank_change_24h > 0
+            and inp.win_rate_change > -2  # win_rate 未显著下滑
             and inp.volume_24h > 1000
             and inp.buy_slippage < 2
             and inp.price_change_24h < 150
@@ -247,16 +259,18 @@ class TradingDecisionEngine:
             return self._make_signal(
                 inp, window, signal_id, created_at,
                 ACTION_PROBE_BUY, CONFIDENCE_MEDIUM,
-                f"评分优质 + 排名 {inp.rank} + 24h 排名上升 {inp.rank_change_24h} 位，建议小仓试探",
-                ["score_good", "rank_rising", "volume_active", "slippage_ok"],
+                f"评分优质 + 排名 {inp.rank} + win_rate 趋势 {inp.win_rate_change:+.1f}pp，建议小仓试探",
+                ["score_good", "rank_rising", "win_rate_improving", "volume_active", "slippage_ok"],
                 risk_checks,
             )
 
         # Step 5: confirm_buy 条件检查
+        # win_rate 显著改善 + 排名持续上升 + 流动性充足
         if (
             inp.score_total >= 80
             and inp.rank_change_1h > 0
             and inp.rank_change_24h >= 3
+            and inp.win_rate_change >= 3  # win_rate 明显改善
             and inp.volume_24h > 20000
             and inp.buy_slippage < 1
             and inp.price_change_24h < 100

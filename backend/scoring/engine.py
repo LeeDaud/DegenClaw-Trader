@@ -283,68 +283,93 @@ class DegenClawScoreEngine:
         total = _clamp(pnl_score + d_score + freq_score + wr_score + penalty, 0, cfg.get("max_total", 20))
         return total, reasons
 
-    # ---- 排名趋势 (0-15) ----
+    # ---- 策略质量趋势 (0-15) ----
 
     def _rank_trend(self, snapshots: list[dict[str, Any]]) -> tuple[int, list[str]]:
-        """排名趋势 (0-15)"""
+        """策略质量趋势 (0-15) — 核心：win_rate 趋势 > 收益质量 > 排名佐证"""
         reasons: list[str] = []
         if not snapshots:
             return 0, reasons
 
-        latest = snapshots[0]
-        current_rank = latest.get("rank", 0)
-        cfg = self.cfg.get("rank_trend", {})
+        cfg = self.cfg.get("strategy_trend", {})
 
-        # 1h 排名变化 (0-5)
+        # ---- 1. win_rate 趋势 (0-7 + 连续改善加分) ----
+        wr_cfg = cfg.get("win_rate", {})
+        wr_n = min(wr_cfg.get("lookback", 5), len(snapshots))
+        wr_score = 0
+        if wr_n >= 2:
+            latest_wr = snapshots[0].get("win_rate", 0)
+            early_wr = snapshots[wr_n - 1].get("win_rate", 0)
+            wr_improvement = latest_wr - early_wr
+
+            for t in wr_cfg.get("thresholds", []):
+                if wr_improvement > t.get("min_improvement", 0):
+                    wr_score = t.get("score", 0)
+                    break
+
+            # 持续改善加分：相邻快照间 win_rate 持续上升
+            wr_vals = [s.get("win_rate", 0) for s in snapshots[:wr_n]]
+            improvements = sum(1 for i in range(wr_n - 1) if wr_vals[i] >= wr_vals[i + 1])
+            if improvements >= wr_n - 1:
+                wr_score += wr_cfg.get("consistent_bonus", 2)
+                reasons.append(f"胜率持续改善")
+            elif improvements >= wr_n - 2:
+                wr_score += 1
+                reasons.append(f"胜率总体改善")
+
+            if wr_improvement > 0:
+                reasons.append(f"胜率↑{wr_improvement:.1f}%")
+            elif wr_improvement < -2:
+                reasons.append(f"胜率↓{abs(wr_improvement):.1f}%")
+
+        # ---- 2. PnL 质量 (0-4) — pnl_7d 正向快照占比 ----
+        q_cfg = cfg.get("pnl_quality", {})
+        q_n = min(q_cfg.get("lookback", 5), len(snapshots))
+        q_score = 0
+        if q_n >= 3:
+            positive = sum(1 for s in snapshots[:q_n] if (s.get("pnl_7d", 0) or 0) > 0)
+            ratio = positive / q_n
+            for t in q_cfg.get("positive_ratio", []):
+                if ratio >= t.get("min_ratio", 0):
+                    q_score = t.get("score", 0)
+                    break
+            if positive >= q_n // 2 + 1:
+                reasons.append(f"PnL正向{positive}/{q_n}")
+
+        # ---- 3. total_realized_pnl 增长 (0-3) — 累积收益增速 ----
+        rp_cfg = cfg.get("realized_pnl_growth", {})
+        rp_n = min(rp_cfg.get("lookback", 3), len(snapshots))
+        rp_score = 0
+        if rp_n >= 2:
+            latest_rp = snapshots[0].get("total_realized_pnl", 0) or 0
+            early_rp = snapshots[rp_n - 1].get("total_realized_pnl", 0) or 0
+            if early_rp != 0:
+                rp_growth = (latest_rp - early_rp) / abs(early_rp) * 100
+            elif latest_rp > 0:
+                rp_growth = 999.0
+            else:
+                rp_growth = 0.0
+            for t in rp_cfg.get("thresholds", []):
+                if rp_growth > t.get("min_growth", 0):
+                    rp_score = t.get("score", 0)
+                    break
+
+        # ---- 4. 排名动量 (0-2) — 仅作佐证 ----
+        rank_score = 0
         if len(snapshots) >= 2:
-            prev = snapshots[1].get("rank", 0)
-            rank_change_1h = prev - current_rank
-        else:
-            rank_change_1h = 0
+            current_rank = snapshots[0].get("rank", 0)
+            rk_n = min(rp_n, len(snapshots))
+            old_rank = snapshots[rk_n - 1].get("rank", 0)
+            rank_change = old_rank - current_rank  # 正=排名上升
+            for t in cfg.get("rank_momentum", {}).get("thresholds", []):
+                if rank_change >= t.get("min_change", 0):
+                    rank_score = t.get("score", 0)
+                    break
+            if rank_score > 0:
+                reasons.append(f"排名↑{rank_change}位")
 
-        trend_1h = 0
-        for t in cfg.get("change_1h", {}).get("thresholds", []):
-            if rank_change_1h >= t.get("min_change", 0):
-                trend_1h = t.get("score", 0)
-                break
-        if trend_1h > 0:
-            reasons.append(f"1h↑{rank_change_1h}位")
-
-        # 24h 排名变化 (0-5)
-        if len(snapshots) >= 3:
-            oldest = snapshots[min(len(snapshots) - 1, 2)].get("rank", 0)
-            rank_change_24h = oldest - current_rank
-        else:
-            rank_change_24h = rank_change_1h
-
-        trend_24h = 0
-        for t in cfg.get("change_24h", {}).get("thresholds", []):
-            if rank_change_24h >= t.get("min_change", 0):
-                trend_24h = t.get("score", 0)
-                break
-        if trend_24h > 0:
-            reasons.append(f"24h↑{rank_change_24h}位")
-
-        # 阈值突破加分 (0-3)
-        boost = 0
-        if len(snapshots) >= 2:
-            prev_rank = snapshots[1].get("rank", 0)
-            if prev_rank > 20 and current_rank <= 15:
-                boost += cfg.get("threshold_boost", {}).get("cross_20_to_15", 3)
-                reasons.append("突破20→15")
-            elif prev_rank > 15 and current_rank <= 10:
-                boost += cfg.get("threshold_boost", {}).get("cross_15_to_10", 2)
-                reasons.append("突破15→10")
-
-        # 跌出 top 10 扣分 (0 to -2)
-        top10_drop = 0
-        if len(snapshots) >= 2:
-            prev_rank = snapshots[1].get("rank", 0)
-            if prev_rank <= 10 and current_rank > 10:
-                top10_drop = cfg.get("top10_drop_penalty", -2)
-                reasons.append("跌出Top10")
-
-        return _clamp(trend_1h + trend_24h + boost + top10_drop, 0, cfg.get("max_total", 15)), reasons
+        total = _clamp(wr_score + q_score + rp_score + rank_score, 0, cfg.get("max_total", 15))
+        return total, reasons
 
     # ---- Token 市场质量 (0-15) ----
 
