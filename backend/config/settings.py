@@ -60,6 +60,15 @@ class Settings:
     pot_pnl_change_threshold: float
     pot_roi_change_threshold: float
     pot_monitor_enabled: bool
+    # 4-tier thresholds
+    pot_pnl_tier_info_pct: float
+    pot_pnl_tier_warning_pct: float
+    pot_pnl_tier_important_pct: float
+    pot_pnl_tier_critical_pct: float
+    pot_roi_tier_info_pct: float
+    pot_roi_tier_warning_pct: float
+    pot_roi_tier_important_pct: float
+    pot_roi_tier_critical_pct: float
 
 
 def load_settings() -> Settings:
@@ -86,4 +95,12 @@ def load_settings() -> Settings:
         pot_pnl_change_threshold=float(os.getenv("POT_PNL_CHANGE_THRESHOLD", "10.0")),
         pot_roi_change_threshold=float(os.getenv("POT_ROI_CHANGE_THRESHOLD", "5.0")),
         pot_monitor_enabled=_to_bool(os.getenv("POT_MONITOR_ENABLED"), True),
+        pot_pnl_tier_info_pct=float(os.getenv("DC_POT_PNL_TIER_INFO_PCT", "3.0")),
+        pot_pnl_tier_warning_pct=float(os.getenv("DC_POT_PNL_TIER_WARNING_PCT", "8.0")),
+        pot_pnl_tier_important_pct=float(os.getenv("DC_POT_PNL_TIER_IMPORTANT_PCT", "15.0")),
+        pot_pnl_tier_critical_pct=float(os.getenv("DC_POT_PNL_TIER_CRITICAL_PCT", "25.0")),
+        pot_roi_tier_info_pct=float(os.getenv("DC_POT_ROI_TIER_INFO_PCT", "2.0")),
+        pot_roi_tier_warning_pct=float(os.getenv("DC_POT_ROI_TIER_WARNING_PCT", "5.0")),
+        pot_roi_tier_important_pct=float(os.getenv("DC_POT_ROI_TIER_IMPORTANT_PCT", "10.0")),
+        pot_roi_tier_critical_pct=float(os.getenv("DC_POT_ROI_TIER_CRITICAL_PCT", "20.0")),
     )

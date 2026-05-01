@@ -213,8 +213,7 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
                 changes = monitor.check_sub_pot_changes(
                     round_id=pot_status["round_id"],
                     sub_pots=sub_pots,
-                    pnl_threshold=settings.pot_pnl_change_threshold,
-                    roi_threshold=settings.pot_roi_change_threshold,
+                    settings=settings,
                 )
                 if changes:
                     notifier = FeishuNotifier(settings.feishu_webhook_url)
