@@ -115,7 +115,7 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
                 round_start=pot_status["round_start"],
                 round_end=pot_status["round_end"],
                 status=pot_status["status"],
-                selected_agents=json.dumps(pot_status.get("selected_agents", [])),
+                selected_agents=pot_status.get("selected_agents", "[]"),
                 pot_pnl=float(pot_status.get("pot_pnl", 0)),
                 created_at=now,
                 updated_at=now,

@@ -330,9 +330,21 @@ class AIPotCollector:
         starting_capital = float(cs.get("startingCapital", 0) or 0)
         final_pnl = float(cs.get("finalPnl", 0) or 0)
         api_current_value = float(cs.get("currentValue", 0) or 0)
-        # API 偶发返回 currentValue=0，此时用 capital + finalPnl 推算
-        if api_current_value == 0 and starting_capital + final_pnl != 0:
-            current_value = max(0, starting_capital + final_pnl)
+        # API 偶发返回 currentValue=0，此时尝试推算
+        if api_current_value == 0:
+            if starting_capital + final_pnl != 0:
+                current_value = max(0, starting_capital + final_pnl)
+            else:
+                # capital+finalPnl 也为 0，检查是否有开放持仓
+                positions = cs.get("positions")
+                if positions:
+                    margin_sum = sum(
+                        float(p.get("notionalSize", 0)) / max(float(p.get("leverage", 1)), 1)
+                        for p in positions
+                    )
+                    current_value = max(0, round(margin_sum + starting_capital + final_pnl, 2))
+                else:
+                    current_value = 0.0
         else:
             current_value = api_current_value
         return {
