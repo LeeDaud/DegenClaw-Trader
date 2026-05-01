@@ -1,11 +1,23 @@
-import { useQuery } from '@tanstack/react-query'
-import { fetchAIPotRounds, fetchAIPotCouncil, fetchAIPotRaw, type AIPotRound, type CouncilEvaluation } from '../api/client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchAIPotRounds, fetchAIPotCouncil, fetchAIPotRaw, triggerScan, type AIPotRound, type CouncilEvaluation } from '../api/client'
+import { RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 
 const tabs = ['Summary', 'Sub-Pots', 'Council', 'Raw Data']
 
 export default function AIPot() {
   const [tab, setTab] = useState(0)
+  const queryClient = useQueryClient()
+
+  const scanMutation = useMutation({
+    mutationFn: triggerScan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-pot-rounds'] })
+      queryClient.invalidateQueries({ queryKey: ['ai-pot-council'] })
+      queryClient.invalidateQueries({ queryKey: ['agents'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
 
   const roundsQuery = useQuery({
     queryKey: ['ai-pot-rounds'],
@@ -29,7 +41,17 @@ export default function AIPot() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">AI Pot</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">AI Pot</h1>
+        <button
+          onClick={() => scanMutation.mutate()}
+          disabled={scanMutation.isPending}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-800 rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw size={14} className={scanMutation.isPending ? 'animate-spin' : ''} />
+          {scanMutation.isPending ? 'Scanning...' : 'Refresh Data'}
+        </button>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-800">

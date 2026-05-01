@@ -331,3 +331,11 @@ export async function fetchSubPotPnlHistory(subPotId: string, limit = 50) {
 export async function fetchAIPotRaw() {
   return apiGet<{ pot_agents: unknown[]; council: unknown }>('/ai-pot/raw')
 }
+
+export async function triggerScan() {
+  const res = await fetch(`${API_BASE}/control/polling/scan`, { method: 'POST' })
+  if (!res.ok) throw new Error(`Scan error: ${res.status}`)
+  const json = await res.json()
+  if (!json.success) throw new Error(json.error?.message || 'Scan error')
+  return json.data as Record<string, unknown>
+}
