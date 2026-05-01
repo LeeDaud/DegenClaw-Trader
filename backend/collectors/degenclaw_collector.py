@@ -330,23 +330,41 @@ class AIPotCollector:
         starting_capital = float(cs.get("startingCapital", 0) or 0)
         final_pnl = float(cs.get("finalPnl", 0) or 0)
         api_current_value = float(cs.get("currentValue", 0) or 0)
+        realized_pnl = float(cs.get("realizedPnl", 0) or 0)
+        unrealized_pnl = float(cs.get("unrealizedPnl", 0) or 0)
+        positions_raw = cs.get("positions", []) or []
+
+        # API 新赛季数据未更新（currentValue=0 且 capital+pnl=0）时，
+        # 降级到 seasons[] 中最近的有效赛季
+        if api_current_value == 0 and starting_capital + final_pnl == 0:
+            for s in (item.get("seasons") or []):
+                cv = float(s.get("currentValue", 0) or 0)
+                if cv != 0 and s.get("seasonId") != cs.get("seasonId"):
+                    api_current_value = cv
+                    starting_capital = float(s.get("startingCapital", 0) or 0)
+                    if s.get("finalPnl") is not None:
+                        final_pnl = float(s.get("finalPnl", 0) or 0)
+                    realized_pnl = float(s.get("realizedPnl", 0) or 0)
+                    unrealized_pnl = float(s.get("unrealizedPnl", 0) or 0)
+                    positions_raw = s.get("positions", []) or []
+                    break
+
         # API 偶发返回 currentValue=0，此时尝试推算
         if api_current_value == 0:
             if starting_capital + final_pnl != 0:
                 current_value = max(0, starting_capital + final_pnl)
             else:
-                # capital+finalPnl 也为 0，检查是否有开放持仓
-                positions = cs.get("positions")
-                if positions:
+                if positions_raw:
                     margin_sum = sum(
                         float(p.get("notionalSize", 0)) / max(float(p.get("leverage", 1)), 1)
-                        for p in positions
+                        for p in positions_raw
                     )
                     current_value = max(0, round(margin_sum + starting_capital + final_pnl, 2))
                 else:
                     current_value = 0.0
         else:
             current_value = api_current_value
+
         return {
             "sub_pot_id": str(item.get("id", "")),
             "name": item.get("name", ""),
@@ -357,10 +375,10 @@ class AIPotCollector:
             "token_symbol": cs.get("tokenSymbol", ""),
             "starting_capital": starting_capital,
             "current_value": current_value,
-            "realized_pnl": float(cs.get("realizedPnl", 0) or 0),
-            "unrealized_pnl": float(cs.get("unrealizedPnl", 0) or 0),
+            "realized_pnl": realized_pnl,
+            "unrealized_pnl": unrealized_pnl,
             "final_pnl": final_pnl,
-            "positions": json.dumps(cs.get("positions", [])),
+            "positions": json.dumps(positions_raw),
         }
 
     async def fetch_raw_pot_agents(self) -> list[dict[str, Any]] | None:
