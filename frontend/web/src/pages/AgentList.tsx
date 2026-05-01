@@ -73,6 +73,8 @@ export default function AgentList() {
               <th className="text-right py-3 px-4">Win Rate</th>
               <th className="text-right py-3 px-4">Trades</th>
               <th className="text-center py-3 px-4">Trend</th>
+              <th className="text-right py-3 px-4 text-purple-400">Council Score</th>
+              <th className="text-center py-3 px-4 text-purple-400">Council Rank</th>
             </tr>
           </thead>
           <tbody>
@@ -142,6 +144,12 @@ export default function AgentList() {
                     ) : (
                       <span className="text-gray-600 text-xs">-</span>
                     )}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono text-purple-400">
+                    {agent.council_score ? agent.council_score.council_score : '-'}
+                  </td>
+                  <td className="py-2.5 px-4 text-center font-mono text-purple-400">
+                    {agent.council_score ? `#${agent.council_score.council_rank}` : '-'}
                   </td>
                 </tr>
               )

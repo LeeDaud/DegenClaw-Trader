@@ -164,6 +164,14 @@ class AIPotRound:
     pot_pnl: float
     created_at: str
     updated_at: str
+    # 以下为后期新增字段（有默认值，兼容旧库）
+    season_id: str = ""
+    total_capital: float = 0.0
+    total_current_value: float = 0.0
+    total_realized_pnl: float = 0.0
+    total_unrealized_pnl: float = 0.0
+    return_pct: float = 0.0
+    raw_data: str = "{}"
 
     def as_record(self) -> dict[str, Any]:
         return asdict(self)
@@ -185,6 +193,152 @@ class AIPotRound:
             pot_pnl=float(row["pot_pnl"]),
             created_at=row["created_at"],
             updated_at=row["updated_at"],
+            season_id=row.get("season_id", ""),
+            total_capital=float(row.get("total_capital", 0)),
+            total_current_value=float(row.get("total_current_value", 0)),
+            total_realized_pnl=float(row.get("total_realized_pnl", 0)),
+            total_unrealized_pnl=float(row.get("total_unrealized_pnl", 0)),
+            return_pct=float(row.get("return_pct", 0)),
+            raw_data=row.get("raw_data", "{}"),
+        )
+
+
+@dataclass(slots=True)
+class PotSubAgent:
+    """AI Pot 子池（每个 pot 持有 10 个子池）"""
+    round_id: str
+    sub_pot_id: str
+    name: str
+    status: str
+    agent_id: str
+    agent_name: str
+    token_address: str
+    token_symbol: str
+    starting_capital: float
+    current_value: float
+    realized_pnl: float
+    unrealized_pnl: float
+    final_pnl: float
+    positions: str  # JSON
+    snapshot_at: str
+
+    def as_record(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_row(cls, row: Any) -> PotSubAgent:
+        return cls(
+            round_id=row["round_id"],
+            sub_pot_id=row["sub_pot_id"],
+            name=row["name"],
+            status=row["status"],
+            agent_id=row["agent_id"],
+            agent_name=row["agent_name"],
+            token_address=row["token_address"],
+            token_symbol=row["token_symbol"],
+            starting_capital=float(row["starting_capital"]),
+            current_value=float(row["current_value"]),
+            realized_pnl=float(row["realized_pnl"]),
+            unrealized_pnl=float(row["unrealized_pnl"]),
+            final_pnl=float(row["final_pnl"]),
+            positions=row["positions"],
+            snapshot_at=row["snapshot_at"],
+        )
+
+
+@dataclass(slots=True)
+class CouncilEvaluation:
+    """AI 评委会评选数据"""
+    season_id: str
+    season_name: str
+    pot_size: float
+    total_agents_analyzed: int
+    consensus_agents: str  # JSON
+    model_verdicts: str    # JSON
+    raw_data: str          # JSON
+    fetched_at: str
+
+    def as_record(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_row(cls, row: Any) -> CouncilEvaluation:
+        return cls(
+            season_id=row["season_id"],
+            season_name=row.get("season_name", ""),
+            pot_size=float(row.get("pot_size", 0)),
+            total_agents_analyzed=int(row.get("total_agents_analyzed", 0)),
+            consensus_agents=row.get("consensus_agents", "[]"),
+            model_verdicts=row.get("model_verdicts", "{}"),
+            raw_data=row.get("raw_data", "{}"),
+            fetched_at=row["fetched_at"],
+        )
+
+
+@dataclass(slots=True)
+class CouncilAgentScore:
+    """评委会对单个 agent 的打分"""
+    season_id: str
+    evaluation_id: int
+    agent_name: str
+    rank: int
+    votes: int
+    per_model_rationale: str  # JSON: {"modelName": "rationale..."}
+    created_at: str
+
+    def as_record(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class PotPnlSnapshot:
+    """子池 PnL 快照（用于监控变化）"""
+    sub_pot_id: str
+    round_id: str
+    current_value: float
+    realized_pnl: float
+    unrealized_pnl: float
+    final_pnl: float
+    snapshot_at: str
+
+    def as_record(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_row(cls, row: Any) -> PotPnlSnapshot:
+        return cls(
+            sub_pot_id=row["sub_pot_id"],
+            round_id=row["round_id"],
+            current_value=float(row["current_value"]),
+            realized_pnl=float(row["realized_pnl"]),
+            unrealized_pnl=float(row["unrealized_pnl"]),
+            final_pnl=float(row["final_pnl"]),
+            snapshot_at=row["snapshot_at"],
+        )
+
+
+@dataclass(slots=True)
+class CouncilLeaderboardScore:
+    """AgentList 中展示的评委会分数映射"""
+    agent_id: str
+    season_id: str
+    council_rank: int
+    council_score: float
+    council_votes: int
+    fetched_at: str
+
+    def as_record(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_row(cls, row: Any) -> CouncilLeaderboardScore:
+        return cls(
+            agent_id=row["agent_id"],
+            season_id=row["season_id"],
+            council_rank=int(row.get("council_rank", 0)),
+            council_score=float(row.get("council_score", 0)),
+            council_votes=int(row.get("council_votes", 0)),
+            fetched_at=row["fetched_at"],
         )
 
 

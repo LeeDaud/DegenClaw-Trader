@@ -6,7 +6,13 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from db.models import Agent, AgentScore, AgentSnapshot, Token, TokenMarketSnapshot, Alert, SystemEvent, AIPotRound, LeaderboardSnapshot, TradeSignalModel, PaperPositionModel
+from db.models import (
+    Agent, AgentScore, AgentSnapshot, Token, TokenMarketSnapshot,
+    Alert, SystemEvent, AIPotRound, LeaderboardSnapshot,
+    TradeSignalModel, PaperPositionModel,
+    PotSubAgent, CouncilEvaluation, CouncilAgentScore,
+    PotPnlSnapshot, CouncilLeaderboardScore,
+)
 
 
 TABLES_SQL = """
@@ -94,8 +100,79 @@ CREATE TABLE IF NOT EXISTS ai_pot_rounds (
     status TEXT NOT NULL DEFAULT 'upcoming',
     selected_agents TEXT NOT NULL DEFAULT '[]',
     pot_pnl REAL NOT NULL DEFAULT 0.0,
+    season_id TEXT NOT NULL DEFAULT '',
+    total_capital REAL NOT NULL DEFAULT 0.0,
+    total_current_value REAL NOT NULL DEFAULT 0.0,
+    total_realized_pnl REAL NOT NULL DEFAULT 0.0,
+    total_unrealized_pnl REAL NOT NULL DEFAULT 0.0,
+    return_pct REAL NOT NULL DEFAULT 0.0,
+    raw_data TEXT NOT NULL DEFAULT '{}',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pot_sub_agents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    round_id TEXT NOT NULL,
+    sub_pot_id TEXT NOT NULL,
+    name TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'active',
+    agent_id TEXT NOT NULL DEFAULT '',
+    agent_name TEXT NOT NULL DEFAULT '',
+    token_address TEXT NOT NULL DEFAULT '',
+    token_symbol TEXT NOT NULL DEFAULT '',
+    starting_capital REAL NOT NULL DEFAULT 0.0,
+    current_value REAL NOT NULL DEFAULT 0.0,
+    realized_pnl REAL NOT NULL DEFAULT 0.0,
+    unrealized_pnl REAL NOT NULL DEFAULT 0.0,
+    final_pnl REAL NOT NULL DEFAULT 0.0,
+    positions TEXT NOT NULL DEFAULT '[]',
+    snapshot_at TEXT NOT NULL,
+    UNIQUE(round_id, sub_pot_id)
+);
+
+CREATE TABLE IF NOT EXISTS council_evaluations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    season_id TEXT NOT NULL,
+    season_name TEXT NOT NULL DEFAULT '',
+    pot_size REAL NOT NULL DEFAULT 0.0,
+    total_agents_analyzed INTEGER NOT NULL DEFAULT 0,
+    consensus_agents TEXT NOT NULL DEFAULT '[]',
+    model_verdicts TEXT NOT NULL DEFAULT '{}',
+    raw_data TEXT NOT NULL DEFAULT '{}',
+    fetched_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS council_agent_scores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    season_id TEXT NOT NULL,
+    evaluation_id INTEGER NOT NULL DEFAULT 0,
+    agent_name TEXT NOT NULL,
+    rank INTEGER NOT NULL DEFAULT 0,
+    votes INTEGER NOT NULL DEFAULT 0,
+    per_model_rationale TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pot_pnl_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sub_pot_id TEXT NOT NULL,
+    round_id TEXT NOT NULL,
+    current_value REAL NOT NULL DEFAULT 0.0,
+    realized_pnl REAL NOT NULL DEFAULT 0.0,
+    unrealized_pnl REAL NOT NULL DEFAULT 0.0,
+    final_pnl REAL NOT NULL DEFAULT 0.0,
+    snapshot_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS council_leaderboard_scores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent_id TEXT NOT NULL,
+    season_id TEXT NOT NULL,
+    council_rank INTEGER NOT NULL DEFAULT 0,
+    council_score REAL NOT NULL DEFAULT 0.0,
+    council_votes INTEGER NOT NULL DEFAULT 0,
+    fetched_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS agent_scores (
@@ -185,6 +262,16 @@ CREATE INDEX IF NOT EXISTS idx_events_module ON system_events(module);
 CREATE INDEX IF NOT EXISTS idx_scores_agent_scored ON agent_scores(agent_id, scored_at DESC);
 CREATE INDEX IF NOT EXISTS idx_scores_total ON agent_scores(score_total DESC);
 CREATE INDEX IF NOT EXISTS idx_pot_rounds_status ON ai_pot_rounds(status);
+CREATE INDEX IF NOT EXISTS idx_pot_sub_agents_round ON pot_sub_agents(round_id);
+CREATE INDEX IF NOT EXISTS idx_pot_sub_agents_agent ON pot_sub_agents(agent_id);
+CREATE INDEX IF NOT EXISTS idx_pot_sub_agents_snapshot ON pot_sub_agents(snapshot_at DESC);
+CREATE INDEX IF NOT EXISTS idx_council_evals_season ON council_evaluations(season_id);
+CREATE INDEX IF NOT EXISTS idx_council_evals_fetched ON council_evaluations(fetched_at DESC);
+CREATE INDEX IF NOT EXISTS idx_council_agent_season ON council_agent_scores(season_id, agent_name);
+CREATE INDEX IF NOT EXISTS idx_council_agent_rank ON council_agent_scores(season_id, rank);
+CREATE INDEX IF NOT EXISTS idx_pnl_snapshots_sub_pot ON pot_pnl_snapshots(sub_pot_id, snapshot_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pnl_snapshots_round ON pot_pnl_snapshots(round_id, snapshot_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cls_unique ON council_leaderboard_scores(agent_id, season_id);
 CREATE INDEX IF NOT EXISTS idx_leaderboard_time ON leaderboard_snapshots(snapshot_at DESC);
 CREATE INDEX IF NOT EXISTS idx_alerts_agent ON alerts(agent_id);
 CREATE INDEX IF NOT EXISTS idx_alerts_time ON alerts(created_at DESC);
@@ -214,6 +301,16 @@ class Database:
         with self._connect() as conn:
             conn.executescript(TABLES_SQL)
             conn.executescript(INDEXES_SQL)
+            # 迁移：ai_pot_rounds 新字段
+            for col, typ in [("season_id", "TEXT"), ("total_capital", "REAL"),
+                              ("total_current_value", "REAL"), ("total_realized_pnl", "REAL"),
+                              ("total_unrealized_pnl", "REAL"), ("return_pct", "REAL"),
+                              ("raw_data", "TEXT")]:
+                try:
+                    default = "0.0" if typ == "REAL" else "''"
+                    conn.execute(f"ALTER TABLE ai_pot_rounds ADD COLUMN {col} {typ} NOT NULL DEFAULT {default}")
+                except sqlite3.OperationalError:
+                    pass
             # 迁移：兼容已有数据库
             for col in ["grade", "reason"]:
                 try:
@@ -444,19 +541,32 @@ class Database:
         with self._connect() as conn:
             conn.execute(
                 """
-                INSERT INTO ai_pot_rounds(round_id, round_start, round_end, status, selected_agents, pot_pnl, created_at, updated_at)
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO ai_pot_rounds(round_id, round_start, round_end, status,
+                    selected_agents, pot_pnl, season_id, total_capital,
+                    total_current_value, total_realized_pnl, total_unrealized_pnl,
+                    return_pct, raw_data, created_at, updated_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(round_id) DO UPDATE SET
                     round_start = excluded.round_start,
                     round_end = excluded.round_end,
                     status = excluded.status,
                     selected_agents = excluded.selected_agents,
                     pot_pnl = excluded.pot_pnl,
+                    season_id = excluded.season_id,
+                    total_capital = excluded.total_capital,
+                    total_current_value = excluded.total_current_value,
+                    total_realized_pnl = excluded.total_realized_pnl,
+                    total_unrealized_pnl = excluded.total_unrealized_pnl,
+                    return_pct = excluded.return_pct,
+                    raw_data = excluded.raw_data,
                     updated_at = excluded.updated_at
                 """,
                 (pot_round.round_id, pot_round.round_start, pot_round.round_end,
                  pot_round.status, pot_round.selected_agents, pot_round.pot_pnl,
-                 pot_round.created_at, pot_round.updated_at),
+                 pot_round.season_id, pot_round.total_capital,
+                 pot_round.total_current_value, pot_round.total_realized_pnl,
+                 pot_round.total_unrealized_pnl, pot_round.return_pct,
+                 pot_round.raw_data, pot_round.created_at, pot_round.updated_at),
             )
             conn.commit()
 
@@ -474,6 +584,187 @@ class Database:
                 (limit,),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    # --- Pot Sub-Agent ---
+
+    def upsert_pot_sub_agent(self, sub: PotSubAgent) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO pot_sub_agents(round_id, sub_pot_id, name, status,
+                    agent_id, agent_name, token_address, token_symbol,
+                    starting_capital, current_value, realized_pnl,
+                    unrealized_pnl, final_pnl, positions, snapshot_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(round_id, sub_pot_id) DO UPDATE SET
+                    name = excluded.name,
+                    status = excluded.status,
+                    current_value = excluded.current_value,
+                    realized_pnl = excluded.realized_pnl,
+                    unrealized_pnl = excluded.unrealized_pnl,
+                    final_pnl = excluded.final_pnl,
+                    positions = excluded.positions,
+                    snapshot_at = excluded.snapshot_at
+                """,
+                (sub.round_id, sub.sub_pot_id, sub.name, sub.status,
+                 sub.agent_id, sub.agent_name, sub.token_address, sub.token_symbol,
+                 sub.starting_capital, sub.current_value, sub.realized_pnl,
+                 sub.unrealized_pnl, sub.final_pnl, sub.positions, sub.snapshot_at),
+            )
+            conn.commit()
+
+    def list_pot_sub_agents(self, round_id: str) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM pot_sub_agents WHERE round_id = ? ORDER BY starting_capital DESC",
+                (round_id,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def list_all_pot_sub_agents(self, limit: int = 100) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM pot_sub_agents ORDER BY snapshot_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_sub_agent_by_id(self, sub_pot_id: str) -> dict[str, Any] | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM pot_sub_agents WHERE sub_pot_id = ? ORDER BY snapshot_at DESC LIMIT 1",
+                (sub_pot_id,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    # --- PnL Snapshot ---
+
+    def insert_pot_pnl_snapshot(self, snap: PotPnlSnapshot) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO pot_pnl_snapshots(sub_pot_id, round_id,
+                    current_value, realized_pnl, unrealized_pnl, final_pnl, snapshot_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?)
+                """,
+                (snap.sub_pot_id, snap.round_id, snap.current_value,
+                 snap.realized_pnl, snap.unrealized_pnl, snap.final_pnl, snap.snapshot_at),
+            )
+            conn.commit()
+
+    def get_pot_pnl_snapshots(self, sub_pot_id: str, limit: int = 5) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM pot_pnl_snapshots WHERE sub_pot_id = ? ORDER BY snapshot_at DESC LIMIT ?",
+                (sub_pot_id, limit),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    # --- Council Evaluation ---
+
+    def upsert_council_evaluation(self, eval_: CouncilEvaluation) -> int:
+        with self._connect() as conn:
+            existing = conn.execute(
+                "SELECT id FROM council_evaluations WHERE season_id = ? ORDER BY fetched_at DESC LIMIT 1",
+                (eval_.season_id,),
+            ).fetchone()
+            if existing:
+                conn.execute(
+                    """UPDATE council_evaluations SET season_name=?, pot_size=?,
+                       total_agents_analyzed=?, consensus_agents=?, model_verdicts=?,
+                       raw_data=?, fetched_at=? WHERE id=?""",
+                    (eval_.season_name, eval_.pot_size, eval_.total_agents_analyzed,
+                     eval_.consensus_agents, eval_.model_verdicts, eval_.raw_data,
+                     eval_.fetched_at, existing["id"]),
+                )
+                conn.commit()
+                return existing["id"]
+            cursor = conn.execute(
+                """INSERT INTO council_evaluations(season_id, season_name, pot_size,
+                   total_agents_analyzed, consensus_agents, model_verdicts, raw_data, fetched_at)
+                   VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
+                (eval_.season_id, eval_.season_name, eval_.pot_size,
+                 eval_.total_agents_analyzed, eval_.consensus_agents,
+                 eval_.model_verdicts, eval_.raw_data, eval_.fetched_at),
+            )
+            conn.commit()
+            return cursor.lastrowid
+
+    def get_council_evaluation(self, season_id: str) -> dict[str, Any] | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM council_evaluations WHERE season_id = ? ORDER BY fetched_at DESC LIMIT 1",
+                (season_id,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_council_evaluations(self, limit: int = 10) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM council_evaluations ORDER BY fetched_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    # --- Council Agent Score ---
+
+    def insert_council_agent_scores(self, scores: list[CouncilAgentScore]) -> None:
+        with self._connect() as conn:
+            conn.executemany(
+                """INSERT INTO council_agent_scores(season_id, evaluation_id,
+                   agent_name, rank, votes, per_model_rationale, created_at)
+                   VALUES(?, ?, ?, ?, ?, ?, ?)""",
+                [(s.season_id, s.evaluation_id, s.agent_name, s.rank,
+                  s.votes, s.per_model_rationale, s.created_at) for s in scores],
+            )
+            conn.commit()
+
+    def get_council_agent_scores(self, season_id: str) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM council_agent_scores WHERE season_id = ? ORDER BY rank ASC",
+                (season_id,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    # --- Council Leaderboard Score (R3) ---
+
+    def upsert_council_leaderboard_score(self, score: CouncilLeaderboardScore) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """INSERT INTO council_leaderboard_scores(agent_id, season_id,
+                   council_rank, council_score, council_votes, fetched_at)
+                   VALUES(?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(agent_id, season_id) DO UPDATE SET
+                       council_rank = excluded.council_rank,
+                       council_score = excluded.council_score,
+                       council_votes = excluded.council_votes,
+                       fetched_at = excluded.fetched_at""",
+                (score.agent_id, score.season_id, score.council_rank,
+                 score.council_score, score.council_votes, score.fetched_at),
+            )
+            conn.commit()
+
+    def get_council_leaderboard_score(self, agent_id: str, season_id: str) -> dict[str, Any] | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM council_leaderboard_scores WHERE agent_id = ? AND season_id = ?",
+                (agent_id, season_id),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_council_leaderboard_scores(self, season_id: str) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM council_leaderboard_scores WHERE season_id = ? ORDER BY council_rank ASC",
+                (season_id,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_agent_by_name(self, name: str) -> dict[str, Any] | None:
+        with self._connect() as conn:
+            row = conn.execute("SELECT * FROM agents WHERE name = ?", (name,)).fetchone()
+        return dict(row) if row else None
 
     # --- Agent Score ---
 
@@ -643,10 +934,22 @@ class Database:
                 "SELECT * FROM agent_scores ORDER BY scored_at DESC LIMIT 5"
             ).fetchall()
 
+        # 增强 pot 数据：关联 sub_pots 统计
+        enriched_pot = None
+        if active_pot:
+            enriched_pot = dict(active_pot)
+            sub_pots = conn.execute(
+                "SELECT * FROM pot_sub_agents WHERE round_id = ? ORDER BY starting_capital DESC",
+                (active_pot["round_id"],),
+            ).fetchall()
+            enriched_pot["sub_pots"] = [dict(r) for r in sub_pots]
+            enriched_pot["sub_pot_count"] = len(sub_pots)
+            enriched_pot["active_count"] = sum(1 for r in sub_pots if r["status"] == "ACTIVE")
+
         return {
             "agent_count": agent_count,
             "last_collect_time": latest_snapshot["snapshot_at"] if latest_snapshot else None,
-            "active_pot_round": dict(active_pot) if active_pot else None,
+            "active_pot_round": enriched_pot,
             "recent_events": [dict(r) for r in recent_events],
             "top_movers": [dict(r) for r in top_movers],
             "recent_signals": [dict(r) for r in recent_signals],

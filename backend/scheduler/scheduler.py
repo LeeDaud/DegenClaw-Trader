@@ -104,7 +104,12 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
         # 3. 采集 AI Pot 状态
         pot_status = await pot.fetch_pot_status()
         if pot_status:
-            from db.models import AIPotRound
+            from db.models import (
+                AIPotRound, CouncilAgentScore, CouncilEvaluation,
+                CouncilLeaderboardScore, PotPnlSnapshot, PotSubAgent,
+            )
+            from monitoring.pot_monitor import PotPnlMonitor
+
             database.upsert_ai_pot_round(AIPotRound(
                 round_id=pot_status["round_id"],
                 round_start=pot_status["round_start"],
@@ -114,8 +119,109 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
                 pot_pnl=float(pot_status.get("pot_pnl", 0)),
                 created_at=now,
                 updated_at=now,
+                season_id=pot_status.get("season_id", ""),
+                total_capital=float(pot_status.get("total_capital", 0)),
+                total_current_value=float(pot_status.get("total_current_value", 0)),
+                total_realized_pnl=float(pot_status.get("total_realized_pnl", 0)),
+                total_unrealized_pnl=float(pot_status.get("total_unrealized_pnl", 0)),
+                return_pct=float(pot_status.get("return_pct", 0)),
+                raw_data=pot_status.get("raw_data", "{}"),
             ))
             summary["pot"] = 1
+
+            # 3a. 存储子池 + PnL 快照
+            sub_pots = pot_status.get("sub_pots", [])
+            for sp in sub_pots:
+                database.upsert_pot_sub_agent(PotSubAgent(
+                    round_id=pot_status["round_id"],
+                    sub_pot_id=sp["sub_pot_id"],
+                    name=sp["name"],
+                    status=sp["status"],
+                    agent_id=sp["agent_id"],
+                    agent_name=sp["agent_name"],
+                    token_address=sp["token_address"],
+                    token_symbol=sp["token_symbol"],
+                    starting_capital=sp["starting_capital"],
+                    current_value=sp["current_value"],
+                    realized_pnl=sp["realized_pnl"],
+                    unrealized_pnl=sp["unrealized_pnl"],
+                    final_pnl=sp["final_pnl"],
+                    positions=sp.get("positions", "[]"),
+                    snapshot_at=now,
+                ))
+                database.insert_pot_pnl_snapshot(PotPnlSnapshot(
+                    sub_pot_id=sp["sub_pot_id"],
+                    round_id=pot_status["round_id"],
+                    current_value=sp["current_value"],
+                    realized_pnl=sp["realized_pnl"],
+                    unrealized_pnl=sp["unrealized_pnl"],
+                    final_pnl=sp["final_pnl"],
+                    snapshot_at=now,
+                ))
+            summary["sub_pots"] = len(sub_pots)
+
+            # 3b. 存储评委会数据
+            council_data = pot_status.get("council_data")
+            if council_data and council_data.get("finalTop10"):
+                eval_id = database.upsert_council_evaluation(CouncilEvaluation(
+                    season_id=pot_status.get("season_id", ""),
+                    season_name=pot_status.get("season_name", ""),
+                    pot_size=float(council_data.get("potSize", 0) or 0),
+                    total_agents_analyzed=int(council_data.get("totalAgentsAnalyzed", 0)),
+                    consensus_agents=json.dumps(council_data.get("consensusAgents", []), ensure_ascii=False),
+                    model_verdicts=json.dumps(council_data.get("modelVerdicts", {}), ensure_ascii=False),
+                    raw_data=json.dumps(council_data, ensure_ascii=False),
+                    fetched_at=now,
+                ))
+
+                # 写入各 agent 评分
+                agent_scores = []
+                for i, agent_entry in enumerate(council_data.get("finalTop10", []), start=1):
+                    agent_name = agent_entry.get("agentName", agent_entry.get("name", ""))
+                    if not agent_name:
+                        continue
+                    per_model = agent_entry.get("perModelRationale", agent_entry.get("perModelReason", {}))
+                    agent_scores.append(CouncilAgentScore(
+                        season_id=pot_status.get("season_id", ""),
+                        evaluation_id=eval_id,
+                        agent_name=agent_name,
+                        rank=i,
+                        votes=int(agent_entry.get("votes", 0)),
+                        per_model_rationale=json.dumps(per_model, ensure_ascii=False),
+                        created_at=now,
+                    ))
+                if agent_scores:
+                    database.insert_council_agent_scores(agent_scores)
+
+                # 3c. 尝试按名称匹配本地 Agent，写入 leaderboard score
+                for score in agent_scores:
+                    agent_row = database.get_agent_by_name(score.agent_name)
+                    if agent_row:
+                        database.upsert_council_leaderboard_score(CouncilLeaderboardScore(
+                            agent_id=agent_row["agent_id"],
+                            season_id=pot_status.get("season_id", ""),
+                            council_rank=score.rank,
+                            council_score=float(score.votes),
+                            council_votes=score.votes,
+                            fetched_at=now,
+                        ))
+
+            # 3d. PnL 监控 — 对比快照 → 飞书通知
+            if settings.pot_monitor_enabled and sub_pots and settings.feishu_alerts_enabled:
+                monitor = PotPnlMonitor(database)
+                changes = monitor.check_sub_pot_changes(
+                    round_id=pot_status["round_id"],
+                    sub_pots=sub_pots,
+                    pnl_threshold=settings.pot_pnl_change_threshold,
+                    roi_threshold=settings.pot_roi_change_threshold,
+                )
+                if changes:
+                    notifier = FeishuNotifier(settings.feishu_webhook_url)
+                    if notifier.is_configured():
+                        for c in changes:
+                            card = PotPnlMonitor.build_feishu_card(c)
+                            notifier.send_card(card, title=f"Pot PnL {c['name']}")
+                        logger.info("Pot PnL 监控: %d 条变更已推送飞书", len(changes))
 
         # 记录成功事件
         database.insert_system_event(SystemEvent(

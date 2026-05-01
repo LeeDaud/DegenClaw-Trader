@@ -25,6 +25,15 @@ export interface AgentScoreData {
   scored_at: string
 }
 
+export interface CouncilLeaderboardScore {
+  agent_id: string
+  season_id: string
+  council_rank: number
+  council_score: number
+  council_votes: number
+  fetched_at: string
+}
+
 export interface Agent {
   id: number
   agent_id: string
@@ -38,6 +47,7 @@ export interface Agent {
   latest_snapshot: AgentSnapshot | null
   latest_market: MarketSnapshot | null
   latest_score: AgentScoreData | null
+  council_score: CouncilLeaderboardScore | null
 }
 
 export interface AgentSnapshot {
@@ -224,4 +234,93 @@ export async function fetchPositions(limit = 50, status?: string) {
 
 export async function fetchPerformance() {
   return apiGet<PaperPerformance>('/performance/paper')
+}
+
+// --- AI Pot ---
+
+export interface AIPotSubAgent {
+  round_id: string
+  sub_pot_id: string
+  name: string
+  status: string
+  agent_id: string
+  agent_name: string
+  token_address: string
+  token_symbol: string
+  starting_capital: number
+  current_value: number
+  realized_pnl: number
+  unrealized_pnl: number
+  final_pnl: number
+  positions: string
+  snapshot_at: string
+}
+
+export interface AIPotRound {
+  round_id: string
+  round_start: string
+  round_end: string
+  status: string
+  selected_agents: string
+  pot_pnl: number
+  season_id: string
+  season_name: string
+  total_capital: number
+  total_current_value: number
+  total_realized_pnl: number
+  total_unrealized_pnl: number
+  return_pct: number
+  raw_data: string
+  created_at: string
+  updated_at: string
+  sub_pots?: AIPotSubAgent[]
+}
+
+export interface CouncilAgentScore {
+  season_id: string
+  evaluation_id: number
+  agent_name: string
+  rank: number
+  votes: number
+  per_model_rationale: string
+  created_at: string
+}
+
+export interface CouncilEvaluation {
+  id: number
+  season_id: string
+  season_name: string
+  pot_size: number
+  total_agents_analyzed: number
+  consensus_agents: string
+  model_verdicts: string
+  raw_data: string
+  fetched_at: string
+  agent_scores?: CouncilAgentScore[]
+}
+
+export interface PotPnlSnapshot {
+  sub_pot_id: string
+  round_id: string
+  current_value: number
+  realized_pnl: number
+  unrealized_pnl: number
+  final_pnl: number
+  snapshot_at: string
+}
+
+export async function fetchAIPotRounds(limit = 20) {
+  return apiGet<{ rounds: AIPotRound[] }>(`/ai-pot/rounds?limit=${limit}`)
+}
+
+export async function fetchAIPotCouncil(limit = 10) {
+  return apiGet<{ evaluations: CouncilEvaluation[] }>(`/ai-pot/council?limit=${limit}`)
+}
+
+export async function fetchSubPotPnlHistory(subPotId: string, limit = 50) {
+  return apiGet<{ sub_pot_id: string; snapshots: PotPnlSnapshot[]; sub_agent: AIPotSubAgent | null }>(`/ai-pot/sub-pots/${subPotId}/pnl-history?limit=${limit}`)
+}
+
+export async function fetchAIPotRaw() {
+  return apiGet<{ pot_agents: unknown[]; council: unknown }>('/ai-pot/raw')
 }

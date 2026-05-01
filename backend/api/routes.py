@@ -60,6 +60,12 @@ async def list_agents(
     else:
         agents = database.list_agents(limit=limit, offset=offset)
         total = database.count_agents()
+    # 获取最新 council season_id 用于 leaderboard 匹配
+    council_season_id = ""
+    council_evals = database.list_council_evaluations(limit=1)
+    if council_evals:
+        council_season_id = council_evals[0]["season_id"]
+
     enriched = []
     for agent in agents:
         snapshot = database.get_agent_latest_snapshot(agent["agent_id"])
@@ -73,11 +79,16 @@ async def list_agents(
         if agent["token_address"]:
             market = database.get_latest_market_snapshot(agent["token_address"])
         latest_score = database.get_agent_score_history(agent["agent_id"], limit=1)
+
+        # 评委会分数
+        council_score = database.get_council_leaderboard_score(agent["agent_id"], council_season_id) if council_season_id else None
+
         enriched.append({
             **agent,
             "latest_snapshot": snapshot,
             "latest_market": market,
             "latest_score": latest_score[0] if latest_score else None,
+            "council_score": council_score,
         })
     return _api_ok({"agents": enriched, "total": total})
 
@@ -172,6 +183,58 @@ async def get_dashboard(request: Request) -> dict[str, Any]:
         **summary,
         "polling_status": controller.get_status(),
     })
+
+
+# --- AI Pot ---
+
+@router.get("/ai-pot/rounds")
+async def list_ai_pot_rounds(
+    request: Request,
+    limit: int = Query(default=20, ge=1, le=100),
+) -> dict[str, Any]:
+    database = get_database(request)
+    rounds = database.list_ai_pot_rounds(limit=limit)
+    enriched = []
+    for r in rounds:
+        sub_pots = database.list_pot_sub_agents(r["round_id"])
+        enriched.append({**r, "sub_pots": sub_pots})
+    return _api_ok({"rounds": enriched})
+
+
+@router.get("/ai-pot/council")
+async def list_ai_pot_council(
+    request: Request,
+    limit: int = Query(default=10, ge=1, le=50),
+) -> dict[str, Any]:
+    database = get_database(request)
+    evaluations = database.list_council_evaluations(limit=limit)
+    enriched = []
+    for ev in evaluations:
+        scores = database.get_council_agent_scores(ev["season_id"])
+        enriched.append({**ev, "agent_scores": scores})
+    return _api_ok({"evaluations": enriched})
+
+
+@router.get("/ai-pot/sub-pots/{sub_pot_id}/pnl-history")
+async def get_sub_pot_pnl_history(
+    sub_pot_id: str,
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=200),
+) -> dict[str, Any]:
+    database = get_database(request)
+    snapshots = database.get_pot_pnl_snapshots(sub_pot_id, limit=limit)
+    sub_agent = database.get_sub_agent_by_id(sub_pot_id)
+    return _api_ok({"sub_pot_id": sub_pot_id, "snapshots": snapshots, "sub_agent": sub_agent})
+
+
+@router.get("/ai-pot/raw")
+async def get_ai_pot_raw(request: Request) -> dict[str, Any]:
+    from collectors.degenclaw_collector import AIPotCollector
+    settings = request.app.state.settings
+    collector = AIPotCollector(settings)
+    pot_agents = await collector.fetch_raw_pot_agents()
+    council = await collector.fetch_raw_council("1")
+    return _api_ok({"pot_agents": pot_agents, "council": council})
 
 
 # --- Events ---

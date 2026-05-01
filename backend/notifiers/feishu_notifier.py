@@ -130,6 +130,26 @@ class FeishuNotifier:
             # 简单裁剪：保留最近添加的一半
             self._dedup_cache = set(list(self._dedup_cache)[-250:])
 
+    def send_card(self, card: dict, title: str = "") -> bool:
+        """发送自定义卡片（已构建好的飞书消息卡片）"""
+        if not self.webhook_url:
+            logger.warning("飞书 webhook 未配置，跳过通知")
+            return False
+
+        payload = {"msg_type": "interactive", "card": card}
+        try:
+            resp = httpx.post(self.webhook_url, json=payload, timeout=10)
+            resp.raise_for_status()
+            result = resp.json()
+            if result.get("code") == 0:
+                logger.info("飞书卡片发送成功: %s", title or "untitled")
+                return True
+            logger.error("飞书卡片 API 返回错误: %s", result)
+            return False
+        except httpx.HTTPError as exc:
+            logger.error("飞书卡片 HTTP 请求失败: %s", exc)
+            return False
+
     def send_alert(self, alert: dict[str, Any]) -> bool:
         """发送单条预警，返回是否成功"""
         if not self.webhook_url:

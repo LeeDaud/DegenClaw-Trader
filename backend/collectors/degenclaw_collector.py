@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import logging
 from typing import Any
 
 import httpx
@@ -8,6 +10,8 @@ import httpx
 from collectors.mock_data import get_mock_agents
 from config.settings import Settings
 from db.models import utc_now_iso
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_degenclaw_item(item: dict[str, Any], position: int) -> dict[str, Any]:
@@ -207,20 +211,192 @@ class MarketCollector:
 
 
 class AIPotCollector:
-    """AI Pot 状态采集器"""
+    """AI Pot 状态采集器 — 对接 degen.virtuals.io/api/pot-agents 和 /api/council"""
+
+    POT_AGENTS_API = "https://degen.virtuals.io/api/pot-agents"
+    COUNCIL_API = "https://degen.virtuals.io/api/council"
+    COUNCIL_API_SEASONS = "https://degen.virtuals.io/api/council/seasons"
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self._is_mock = settings.collector_source == "mock"
 
     async def fetch_pot_status(self) -> dict[str, Any] | None:
+        """主入口：返回合并的 pot 状态（含 sub_pots 和 council_data）"""
         if self._is_mock:
-            return {
-                "round_id": "round_001",
-                "round_start": "2026-04-21T00:00:00Z",
-                "round_end": "2026-04-28T00:00:00Z",
-                "status": "active",
-                "selected_agents": ["agent_001", "agent_002", "agent_003"],
-                "pot_pnl": 12.5,
-            }
+            return self._mock_pot_status()
+
+        pot_agents = await self._fetch_pot_agents()
+        if not pot_agents:
+            return None
+
+        # 提取赛季信息
+        first = pot_agents[0]
+        cs = first.get("currentSeason") or {}
+        season_id = cs.get("seasonId", "")
+        season_name = cs.get("seasonName", "")
+
+        # 计算汇总数据
+        sub_pots_norm = [self._normalize_sub_pot(a) for a in pot_agents]
+        total_capital = sum(s["starting_capital"] for s in sub_pots_norm)
+        total_value = sum(s["current_value"] for s in sub_pots_norm)
+        total_realized = sum(s["realized_pnl"] for s in sub_pots_norm)
+        total_unrealized = sum(s["unrealized_pnl"] for s in sub_pots_norm)
+        total_final = sum(s["final_pnl"] for s in sub_pots_norm)
+        return_pct = round((total_value / total_capital - 1) * 100, 2) if total_capital else 0.0
+
+        # 尝试获取评委会数据
+        council_data = await self._fetch_council_for_season(season_id)
+
+        now = utc_now_iso()
+        return {
+            "round_id": f"pot_{season_id}",
+            "round_start": cs.get("seasonStartDate", now),
+            "round_end": cs.get("seasonEndDate", now),
+            "status": "active",
+            "selected_agents": json.dumps([s["name"] for s in sub_pots_norm]),
+            "pot_pnl": total_final,
+            "season_id": season_id,
+            "season_name": season_name,
+            "total_capital": total_capital,
+            "total_current_value": total_value,
+            "total_realized_pnl": total_realized,
+            "total_unrealized_pnl": total_unrealized,
+            "return_pct": return_pct,
+            "raw_data": json.dumps({"pot_agents": pot_agents, "council": council_data}, ensure_ascii=False),
+            "sub_pots": sub_pots_norm,
+            "council_data": council_data,
+        }
+
+    async def _fetch_pot_agents(self) -> list[dict[str, Any]] | None:
+        """GET /api/pot-agents"""
+        headers = _build_api_headers()
+        try:
+            async with httpx.AsyncClient(timeout=15, headers=headers) as client:
+                resp = await client.get(self.POT_AGENTS_API)
+                resp.raise_for_status()
+                payload = resp.json()
+                data = payload.get("data", [])
+                return data if isinstance(data, list) else None
+        except Exception as exc:
+            logger.warning("fetch pot-agents failed: %s", exc)
+            return None
+
+    async def _fetch_council(self, season_id: str) -> dict[str, Any] | None:
+        """GET /api/council?seasonId=N"""
+        headers = _build_api_headers()
+        try:
+            async with httpx.AsyncClient(timeout=15, headers=headers) as client:
+                resp = await client.get(self.COUNCIL_API, params={"seasonId": season_id})
+                resp.raise_for_status()
+                payload = resp.json()
+                if payload.get("success"):
+                    return payload.get("data")
+                return None
+        except Exception as exc:
+            logger.warning("fetch council (seasonId=%s) failed: %s", season_id, exc)
+            return None
+
+    async def _fetch_council_seasons(self) -> list[int]:
+        """GET /api/council/seasons — 返回可用的 council season ID 列表"""
+        headers = _build_api_headers()
+        try:
+            async with httpx.AsyncClient(timeout=10, headers=headers) as client:
+                resp = await client.get(self.COUNCIL_API_SEASONS)
+                resp.raise_for_status()
+                payload = resp.json()
+                if payload.get("success"):
+                    return payload.get("data", {}).get("seasons", [])
+                return []
+        except Exception:
+            return []
+
+    async def _fetch_council_for_season(self, pot_season_id: str) -> dict[str, Any] | None:
+        """尝试找到匹配的评委会数据：先试 pot_season_id，再试最新 council season"""
+        council = await self._fetch_council(pot_season_id)
+        if council:
+            return council
+        # 遍历可用 council season（取最新的）
+        seasons = await self._fetch_council_seasons()
+        for sid in sorted(seasons, reverse=True):
+            council = await self._fetch_council(str(sid))
+            if council:
+                return council
         return None
+
+    def _normalize_sub_pot(self, item: dict[str, Any]) -> dict[str, Any]:
+        """将 pot-agent API 项扁平化为内部字段"""
+        cs = item.get("currentSeason") or {}
+        return {
+            "sub_pot_id": str(item.get("id", "")),
+            "name": item.get("name", ""),
+            "status": item.get("status", "active"),
+            "agent_id": str(cs.get("copyTradeAgentId", "")),
+            "agent_name": cs.get("copyTradeAgentName", ""),
+            "token_address": cs.get("tokenAddress", ""),
+            "token_symbol": cs.get("tokenSymbol", ""),
+            "starting_capital": float(cs.get("startingCapital", 0) or 0),
+            "current_value": float(cs.get("currentValue", 0) or 0),
+            "realized_pnl": float(cs.get("realizedPnl", 0) or 0),
+            "unrealized_pnl": float(cs.get("unrealizedPnl", 0) or 0),
+            "final_pnl": float(cs.get("finalPnl", 0) or 0),
+            "positions": json.dumps(cs.get("positions", [])),
+        }
+
+    async def fetch_raw_pot_agents(self) -> list[dict[str, Any]] | None:
+        """返回原始 pot-agents API 数据（调试用）"""
+        if self._is_mock:
+            return []
+        return await self._fetch_pot_agents()
+
+    async def fetch_raw_council(self, season_id: str) -> dict[str, Any] | None:
+        """返回原始 council API 数据（调试用）"""
+        if self._is_mock:
+            return None
+        return await self._fetch_council(season_id)
+
+    def _mock_pot_status(self) -> dict[str, Any]:
+        now = utc_now_iso()
+        mock_sub_pots = [
+            {"sub_pot_id": "5", "name": "DiamondHands", "status": "ACTIVE",
+             "agent_id": "210", "agent_name": "Degentic AI", "token_address": "", "token_symbol": "BL",
+             "starting_capital": 39576, "current_value": 43312.43, "realized_pnl": 3736.43,
+             "unrealized_pnl": 0, "final_pnl": 3736.43, "positions": "[]"},
+            {"sub_pot_id": "4", "name": "GoldenHands", "status": "ACTIVE",
+             "agent_id": "280", "agent_name": "BenYorke | Starchild", "token_address": "", "token_symbol": "BENYORKE",
+             "starting_capital": 33922, "current_value": 33291.20, "realized_pnl": -630.80,
+             "unrealized_pnl": 0, "final_pnl": -630.80, "positions": "[]"},
+            {"sub_pot_id": "3", "name": "SilverHands", "status": "ACTIVE",
+             "agent_id": "350", "agent_name": "seykota", "token_address": "", "token_symbol": "SEYKOTA",
+             "starting_capital": 26148, "current_value": 28572.35, "realized_pnl": 2424.35,
+             "unrealized_pnl": 0, "final_pnl": 2424.35, "positions": "[]"},
+        ]
+        total_capital = sum(s["starting_capital"] for s in mock_sub_pots)
+        total_value = sum(s["current_value"] for s in mock_sub_pots)
+        total_pnl = sum(s["final_pnl"] for s in mock_sub_pots)
+        return_pct = round((total_value / total_capital - 1) * 100, 2) if total_capital else 0.0
+        return {
+            "round_id": "pot_mock",
+            "round_start": now, "round_end": now,
+            "status": "active",
+            "selected_agents": json.dumps([s["name"] for s in mock_sub_pots]),
+            "pot_pnl": total_pnl,
+            "season_id": "mock",
+            "season_name": "Mock Season",
+            "total_capital": total_capital,
+            "total_current_value": total_value,
+            "total_realized_pnl": total_pnl,
+            "total_unrealized_pnl": 0,
+            "return_pct": return_pct,
+            "raw_data": "{}",
+            "sub_pots": mock_sub_pots,
+            "council_data": None,
+        }
+
+
+def _build_api_headers() -> dict[str, str]:
+    return {
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "accept": "application/json, text/plain, */*",
+        "referer": "https://degen.virtuals.io/",
+    }

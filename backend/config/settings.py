@@ -57,6 +57,9 @@ class Settings:
     log_level: str
     feishu_webhook_url: str | None
     feishu_alerts_enabled: bool
+    pot_pnl_change_threshold: float
+    pot_roi_change_threshold: float
+    pot_monitor_enabled: bool
 
 
 def load_settings() -> Settings:
@@ -80,4 +83,7 @@ def load_settings() -> Settings:
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         feishu_webhook_url=os.getenv("FEISHU_WEBHOOK_URL") or None,
         feishu_alerts_enabled=_to_bool(os.getenv("FEISHU_ALERTS_ENABLED"), False),
+        pot_pnl_change_threshold=float(os.getenv("POT_PNL_CHANGE_THRESHOLD", "10.0")),
+        pot_roi_change_threshold=float(os.getenv("POT_ROI_CHANGE_THRESHOLD", "5.0")),
+        pot_monitor_enabled=_to_bool(os.getenv("POT_MONITOR_ENABLED"), True),
     )

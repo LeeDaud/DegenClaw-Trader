@@ -34,7 +34,8 @@
       "Bash(python -c \"import uvicorn; print\\('uvicorn ok'\\)\")",
       "Bash(netstat -ano)",
       "Bash(npm run *)",
-      "Bash(ssh *)"
+      "Bash(ssh *)",
+      "WebFetch(domain:degen.virtuals.io)"
     ]
   }
 }
