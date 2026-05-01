@@ -87,6 +87,7 @@ class PotPnlMonitor:
                 "name": sp["name"],
                 "agent_name": sp.get("agent_name", ""),
                 "agent_id": str(sp.get("agent_id", "")),
+                "token_symbol": sp.get("token_symbol", ""),
                 "starting_capital": starting,
                 "pnl_before": round(prev["final_pnl"], 2),
                 "pnl_now": round(latest["final_pnl"], 2),
@@ -327,7 +328,9 @@ class PotPnlMonitor:
         pnl_str = f"+{pnl_pct}%" if pnl_pct >= 0 else f"{pnl_pct}%"
 
         # Header
-        header_text = f"{icon} {signal.upper()} · {tier.upper()} · {change['name']} ({change.get('agent_name', '')})"
+        token_symbol = change.get("token_symbol", "")
+        token_line = f"\n{token_symbol}" if token_symbol else ""
+        header_text = f"{icon} {signal.upper()} · {tier.upper()} · {change['name']} ({change.get('agent_name', '')}){token_line}"
 
         elements: list[dict[str, Any]] = [
             # PnL 摘要
