@@ -23,7 +23,9 @@ export default function Dashboard() {
     return <div className="text-center py-20 text-red-400">Failed to load dashboard</div>
   }
 
-  const topAgents = (agentsData?.agents || []).slice(0, 10)
+  const pot = dashboard.active_pot_round
+  const potReturn = pot ? (pot.return_pct ?? pot.pot_pnl) : 0
+  const potReturnLabel = pot ? `${potReturn >= 0 ? '+' : ''}${potReturn.toFixed(2)}%` : '-'
 
   return (
     <div className="space-y-6">
@@ -54,9 +56,15 @@ export default function Dashboard() {
         />
         <StatusCard
           icon={TrendingUp}
-          label="Pot PnL"
-          value={dashboard.active_pot_round ? `${dashboard.active_pot_round.pot_pnl > 0 ? '+' : ''}${dashboard.active_pot_round.pot_pnl}%` : '-'}
-          color={dashboard.active_pot_round?.pot_pnl && dashboard.active_pot_round.pot_pnl > 0 ? 'emerald' : 'red'}
+          label="Pot Return"
+          value={potReturnLabel}
+          color={potReturn > 0 ? 'emerald' : 'red'}
+        />
+        <StatusCard
+          icon={Users}
+          label="Sub-Pots"
+          value={pot ? `${pot.active_count ?? '?'}/${pot.sub_pot_count ?? '?'}` : '-'}
+          color="blue"
         />
         <StatusCard
           icon={Activity}

@@ -109,6 +109,13 @@ export interface DashboardSummary {
     status: string
     selected_agents: string
     pot_pnl: number
+    season_name?: string
+    return_pct?: number
+    total_capital?: number
+    total_current_value?: number
+    total_realized_pnl?: number
+    sub_pot_count?: number
+    active_count?: number
   } | null
   recent_events: SystemEvent[]
   top_movers: Array<{
