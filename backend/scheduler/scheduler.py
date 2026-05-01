@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 
 from config.settings import Settings
 from db.database import Database
@@ -25,6 +26,10 @@ except ModuleNotFoundError:
     AsyncIOScheduler = None  # fallback handled below
 
 logger = logging.getLogger(__name__)
+
+# Pot PnL 通知冷却：同一 sub_pot 5 分钟内不重复推送
+_pot_pnl_cooldown: dict[str, float] = {}
+_POT_PNL_COOLDOWN_SECONDS = 300
 
 
 async def run_collection(database: Database, settings: Settings) -> dict[str, int]:
@@ -218,10 +223,27 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
                 if changes:
                     notifier = FeishuNotifier(settings.feishu_webhook_url)
                     if notifier.is_configured():
+                        now = time.time()
+                        sent = 0
+                        skipped_tier = 0
+                        skipped_cooldown = 0
                         for c in changes:
+                            # 仅推送 warning+ 级别
+                            if c.get("tier", "info") == "info":
+                                skipped_tier += 1
+                                continue
+                            # 同一 sub_pot 冷却期内不重复
+                            spid = c["sub_pot_id"]
+                            last = _pot_pnl_cooldown.get(spid, 0)
+                            if now - last < _POT_PNL_COOLDOWN_SECONDS:
+                                skipped_cooldown += 1
+                                continue
+                            _pot_pnl_cooldown[spid] = now
                             card = PotPnlMonitor.build_feishu_card(c)
                             notifier.send_card(card, title=f"Pot PnL {c['name']}")
-                        logger.info("Pot PnL 监控: %d 条变更已推送飞书", len(changes))
+                            sent += 1
+                        if sent:
+                            logger.info("Pot PnL 监控: %d 条推送 (info跳过=%d, 冷却跳过=%d)", sent, skipped_tier, skipped_cooldown)
 
         # 记录成功事件
         database.insert_system_event(SystemEvent(
