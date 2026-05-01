@@ -335,7 +335,7 @@ class AIPotCollector:
     HYPERLIQUID_API = "https://api.hyperliquid.xyz/info"
 
     async def _enrich_with_hyperliquid(self, sub_pots: list[dict[str, Any]]) -> None:
-        """用 HyperLiquid 实时 perpetual 数据覆盖 sub_pot 的 current_value / PnL / positions"""
+        """用 HyperLiquid 实时数据补充（仅用于 API 数据缺失时的末位兜底 + 持仓价格更新）"""
         wallets = [s.get("agent_wallet", "") for s in sub_pots if s.get("agent_wallet")]
         if not wallets:
             return
@@ -355,7 +355,7 @@ class AIPotCollector:
         if not hl_data:
             return
 
-        # 获取最新价格（用于验证）
+        # 获取最新价格（用于持仓价格更新）
         try:
             mids_raw = await self._fetch_hl_mids()
         except Exception:
@@ -369,21 +369,9 @@ class AIPotCollector:
 
             acct_val = float(hl["marginSummary"]["accountValue"])
             positions = hl.get("assetPositions", [])
-
-            # unrealized PnL from all open positions
-            unrealized = sum(float(p["position"]["unrealizedPnl"]) for p in positions)
-
-            # current_value = HyperLiquid account equity
-            # final_pnl = equity - starting_capital (realized + unrealized)
             starting = float(sp.get("starting_capital", 0) or 0)
-            total_pnl = acct_val - starting
 
-            sp["current_value"] = round(acct_val, 2)
-            sp["unrealized_pnl"] = round(unrealized, 2)
-            sp["realized_pnl"] = round(total_pnl - unrealized, 2)
-            sp["final_pnl"] = round(total_pnl, 2)
-
-            # 格式化持仓为 JSON
+            # 更新持仓实时价格（不覆盖 value/PnL）
             hl_positions = []
             for p in positions:
                 pos = p["position"]
@@ -399,7 +387,19 @@ class AIPotCollector:
                     "position_value": float(pos["positionValue"]),
                     "liquidation_price": float(pos["liquidationPx"]) if pos.get("liquidationPx") else None,
                 })
-            sp["positions"] = json.dumps(hl_positions)
+            if hl_positions:
+                sp["positions"] = json.dumps(hl_positions)
+
+            # 末位兜底：仅当 API + seasons 降级后 current_value 仍为 0 时，用 HL 账户净值
+            current_val = float(sp.get("current_value", 0) or 0)
+            if current_val == 0 and acct_val > 0 and starting > 0:
+                total_pnl = acct_val - starting
+                unrealized = sum(float(p["position"]["unrealizedPnl"]) for p in positions)
+                sp["current_value"] = round(acct_val, 2)
+                sp["unrealized_pnl"] = round(unrealized, 2)
+                sp["realized_pnl"] = round(total_pnl - unrealized, 2)
+                sp["final_pnl"] = round(total_pnl, 2)
+                logger.info("HL fallback for %s: acctVal=%.2f", sp.get("name"), acct_val)
 
     async def _fetch_hl_clearinghouse(self, wallet: str) -> dict:
         """GET clearinghouse state from HyperLiquid"""
@@ -432,13 +432,12 @@ class AIPotCollector:
         positions_raw = cs.get("positions", []) or []
 
         # API 新赛季数据未更新（currentValue=0 且 capital+pnl=0）时，
-        # 降级到 seasons[] 中最近的有效赛季
+        # 降级到 seasons[] 中最近的有效赛季（仅用于 current_value 推算，不覆盖 starting_capital）
         if api_current_value == 0 and starting_capital + final_pnl == 0:
             for s in (item.get("seasons") or []):
                 cv = float(s.get("currentValue", 0) or 0)
                 if cv != 0 and s.get("seasonId") != cs.get("seasonId"):
                     api_current_value = cv
-                    starting_capital = float(s.get("startingCapital", 0) or 0)
                     if s.get("finalPnl") is not None:
                         final_pnl = float(s.get("finalPnl", 0) or 0)
                     realized_pnl = float(s.get("realizedPnl", 0) or 0)
