@@ -78,7 +78,7 @@ def load_settings() -> Settings:
         virtuals_max_pages=max(int(os.getenv("VIRTUALS_MAX_PAGES", "3")), 1),
         degenclaw_app_base_url=os.getenv("DEGENCLAW_APP_BASE_URL", "https://app.virtuals.io"),
         dexscreener_endpoint=os.getenv("DEXSCREENER_ENDPOINT") or None,
-        poll_interval_seconds=max(int(os.getenv("POLL_INTERVAL_SECONDS", "300")), 30),
+        poll_interval_seconds=max(int(os.getenv("POLL_INTERVAL_SECONDS", "60")), 5),
         request_timeout_seconds=max(int(os.getenv("REQUEST_TIMEOUT_SECONDS", "15")), 3),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         feishu_webhook_url=os.getenv("FEISHU_WEBHOOK_URL") or None,
