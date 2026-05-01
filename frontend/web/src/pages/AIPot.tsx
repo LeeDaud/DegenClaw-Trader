@@ -111,9 +111,9 @@ export default function AIPot() {
 
               {/* Stored evaluations: Model Verdicts + Raw Data */}
               {evaluations.map((ev) => {
-                let mv: unknown = null
+                let mv: any = null
                 try { mv = JSON.parse(ev.model_verdicts) } catch { /* ignore */ }
-                let rd: unknown = null
+                let rd: any = null
                 try { rd = JSON.parse(ev.raw_data) } catch { /* ignore */ }
                 return (
                   <div key={ev.id} className="space-y-2">
