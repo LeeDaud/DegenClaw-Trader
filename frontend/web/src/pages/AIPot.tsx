@@ -232,12 +232,12 @@ function CouncilPanel({ evaluation }: { evaluation: CouncilEvaluation }) {
 
       {/* Model Verdicts */}
       {Object.keys(modelVerdicts).length > 0 && (
-        <div>
-          <div className="text-xs text-gray-400 mb-2">Model Verdicts</div>
-          <pre className="text-xs text-gray-300 bg-gray-950 rounded p-3 max-h-40 overflow-y-auto">
+        <details>
+          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-200 mb-2">Model Verdicts</summary>
+          <pre className="text-xs text-gray-300 bg-gray-950 rounded p-3 max-h-96 overflow-y-auto">
             {JSON.stringify(modelVerdicts, null, 2)}
           </pre>
-        </div>
+        </details>
       )}
 
       {/* Raw data */}
