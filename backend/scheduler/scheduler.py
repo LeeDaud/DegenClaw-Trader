@@ -120,6 +120,7 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
                 created_at=now,
                 updated_at=now,
                 season_id=pot_status.get("season_id", ""),
+                season_name=pot_status.get("season_name", ""),
                 total_capital=float(pot_status.get("total_capital", 0)),
                 total_current_value=float(pot_status.get("total_current_value", 0)),
                 total_realized_pnl=float(pot_status.get("total_realized_pnl", 0)),

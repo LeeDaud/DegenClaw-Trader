@@ -302,7 +302,8 @@ class Database:
             conn.executescript(TABLES_SQL)
             conn.executescript(INDEXES_SQL)
             # 迁移：ai_pot_rounds 新字段
-            for col, typ in [("season_id", "TEXT"), ("total_capital", "REAL"),
+            for col, typ in [("season_id", "TEXT"), ("season_name", "TEXT"),
+                              ("total_capital", "REAL"),
                               ("total_current_value", "REAL"), ("total_realized_pnl", "REAL"),
                               ("total_unrealized_pnl", "REAL"), ("return_pct", "REAL"),
                               ("raw_data", "TEXT")]:
@@ -542,10 +543,10 @@ class Database:
             conn.execute(
                 """
                 INSERT INTO ai_pot_rounds(round_id, round_start, round_end, status,
-                    selected_agents, pot_pnl, season_id, total_capital,
-                    total_current_value, total_realized_pnl, total_unrealized_pnl,
-                    return_pct, raw_data, created_at, updated_at)
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    selected_agents, pot_pnl, season_id, season_name,
+                    total_capital, total_current_value, total_realized_pnl,
+                    total_unrealized_pnl, return_pct, raw_data, created_at, updated_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(round_id) DO UPDATE SET
                     round_start = excluded.round_start,
                     round_end = excluded.round_end,
@@ -553,6 +554,7 @@ class Database:
                     selected_agents = excluded.selected_agents,
                     pot_pnl = excluded.pot_pnl,
                     season_id = excluded.season_id,
+                    season_name = excluded.season_name,
                     total_capital = excluded.total_capital,
                     total_current_value = excluded.total_current_value,
                     total_realized_pnl = excluded.total_realized_pnl,
@@ -563,7 +565,8 @@ class Database:
                 """,
                 (pot_round.round_id, pot_round.round_start, pot_round.round_end,
                  pot_round.status, pot_round.selected_agents, pot_round.pot_pnl,
-                 pot_round.season_id, pot_round.total_capital,
+                 pot_round.season_id, pot_round.season_name,
+                 pot_round.total_capital,
                  pot_round.total_current_value, pot_round.total_realized_pnl,
                  pot_round.total_unrealized_pnl, pot_round.return_pct,
                  pot_round.raw_data, pot_round.created_at, pot_round.updated_at),
