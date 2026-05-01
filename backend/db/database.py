@@ -710,6 +710,12 @@ class Database:
 
     def insert_council_agent_scores(self, scores: list[CouncilAgentScore]) -> None:
         with self._connect() as conn:
+            # 先清除同一 evaluation 的旧数据，避免重复
+            if scores:
+                conn.execute(
+                    "DELETE FROM council_agent_scores WHERE season_id = ? AND evaluation_id = ?",
+                    (scores[0].season_id, scores[0].evaluation_id),
+                )
             conn.executemany(
                 """INSERT INTO council_agent_scores(season_id, evaluation_id,
                    agent_name, rank, votes, per_model_rationale, created_at)

@@ -106,8 +106,22 @@ export default function AIPot() {
             <div className="text-center py-20 text-gray-500">Loading...</div>
           ) : (
             <>
-              <RawBlock title="Pot Agents" data={rawQuery.data?.pot_agents} />
-              <RawBlock title="Council" data={rawQuery.data?.council} />
+              <RawBlock title="Pot Agents (API)" data={rawQuery.data?.pot_agents} />
+              <RawBlock title="Council (API)" data={rawQuery.data?.council} />
+
+              {/* Stored evaluations: Model Verdicts + Raw Data */}
+              {evaluations.map((ev) => {
+                let mv: unknown = null
+                try { mv = JSON.parse(ev.model_verdicts) } catch { /* ignore */ }
+                let rd: unknown = null
+                try { rd = JSON.parse(ev.raw_data) } catch { /* ignore */ }
+                return (
+                  <div key={ev.id} className="space-y-2">
+                    {mv && <RawBlock title={`Model Verdicts (Season ${ev.season_name || ev.season_id})`} data={mv} />}
+                    {rd && <RawBlock title={`Council Raw Data (Season ${ev.season_name || ev.season_id})`} data={rd} />}
+                  </div>
+                )
+              })}
             </>
           )}
         </div>
@@ -179,9 +193,6 @@ function CouncilPanel({ evaluation }: { evaluation: CouncilEvaluation }) {
   let consensusAgents: string[] = []
   try { consensusAgents = JSON.parse(evaluation.consensus_agents) } catch { /* ignore */ }
 
-  let modelVerdicts: Record<string, unknown> = {}
-  try { modelVerdicts = JSON.parse(evaluation.model_verdicts) } catch { /* ignore */ }
-
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -228,26 +239,6 @@ function CouncilPanel({ evaluation }: { evaluation: CouncilEvaluation }) {
             </tbody>
           </table>
         </div>
-      )}
-
-      {/* Model Verdicts */}
-      {Object.keys(modelVerdicts).length > 0 && (
-        <details>
-          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-200 mb-2">Model Verdicts</summary>
-          <pre className="text-xs text-gray-300 bg-gray-950 rounded p-3 max-h-96 overflow-y-auto">
-            {JSON.stringify(modelVerdicts, null, 2)}
-          </pre>
-        </details>
-      )}
-
-      {/* Raw data */}
-      {evaluation.raw_data && evaluation.raw_data !== '{}' && (
-        <details>
-          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-200">Raw Data</summary>
-          <pre className="text-xs text-gray-300 bg-gray-950 rounded p-3 mt-2 max-h-60 overflow-y-auto">
-            {JSON.stringify(JSON.parse(evaluation.raw_data), null, 2)}
-          </pre>
-        </details>
       )}
     </div>
   )
