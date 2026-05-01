@@ -238,6 +238,10 @@ class AIPotCollector:
 
         # 计算汇总数据
         sub_pots_norm = [self._normalize_sub_pot(a) for a in pot_agents]
+
+        # 用 HyperLiquid 实时数据覆盖 API 数据（perpetual 账户 + 持仓）
+        await self._enrich_with_hyperliquid(sub_pots_norm)
+
         total_capital = sum(s["starting_capital"] for s in sub_pots_norm)
         total_value = sum(s["current_value"] for s in sub_pots_norm)
         total_realized = sum(s["realized_pnl"] for s in sub_pots_norm)
@@ -324,6 +328,99 @@ class AIPotCollector:
                 return council
         return None
 
+    # ----------------------------------------------------------------
+    # HyperLiquid 实时数据
+    # ----------------------------------------------------------------
+
+    HYPERLIQUID_API = "https://api.hyperliquid.xyz/info"
+
+    async def _enrich_with_hyperliquid(self, sub_pots: list[dict[str, Any]]) -> None:
+        """用 HyperLiquid 实时 perpetual 数据覆盖 sub_pot 的 current_value / PnL / positions"""
+        wallets = [s.get("agent_wallet", "") for s in sub_pots if s.get("agent_wallet")]
+        if not wallets:
+            return
+
+        # 批量获取真实持仓
+        results = await asyncio.gather(
+            *[self._fetch_hl_clearinghouse(w) for w in wallets],
+            return_exceptions=True,
+        )
+        hl_data: dict[str, dict] = {}
+        for wallet, result in zip(wallets, results):
+            if isinstance(result, Exception):
+                logger.debug("HyperLiquid query failed for %s: %s", wallet, result)
+                continue
+            hl_data[wallet] = result
+
+        if not hl_data:
+            return
+
+        # 获取最新价格（用于验证）
+        try:
+            mids_raw = await self._fetch_hl_mids()
+        except Exception:
+            mids_raw = {}
+
+        for sp in sub_pots:
+            wallet = sp.get("agent_wallet", "")
+            hl = hl_data.get(wallet)
+            if not hl:
+                continue
+
+            acct_val = float(hl["marginSummary"]["accountValue"])
+            positions = hl.get("assetPositions", [])
+
+            # unrealized PnL from all open positions
+            unrealized = sum(float(p["position"]["unrealizedPnl"]) for p in positions)
+
+            # current_value = HyperLiquid account equity
+            # final_pnl = equity - starting_capital (realized + unrealized)
+            starting = float(sp.get("starting_capital", 0) or 0)
+            total_pnl = acct_val - starting
+
+            sp["current_value"] = round(acct_val, 2)
+            sp["unrealized_pnl"] = round(unrealized, 2)
+            sp["realized_pnl"] = round(total_pnl - unrealized, 2)
+            sp["final_pnl"] = round(total_pnl, 2)
+
+            # 格式化持仓为 JSON
+            hl_positions = []
+            for p in positions:
+                pos = p["position"]
+                coin = pos["coin"]
+                mid = mids_raw.get(coin, 0)
+                hl_positions.append({
+                    "coin": coin,
+                    "size": float(pos["szi"]),
+                    "entry_price": float(pos["entryPx"]),
+                    "current_price": float(mid) if mid else 0,
+                    "unrealized_pnl": float(pos["unrealizedPnl"]),
+                    "leverage": float(pos["leverage"]["value"]) if isinstance(pos.get("leverage"), dict) else 3,
+                    "position_value": float(pos["positionValue"]),
+                    "liquidation_price": float(pos["liquidationPx"]) if pos.get("liquidationPx") else None,
+                })
+            sp["positions"] = json.dumps(hl_positions)
+
+    async def _fetch_hl_clearinghouse(self, wallet: str) -> dict:
+        """GET clearinghouse state from HyperLiquid"""
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                self.HYPERLIQUID_API,
+                json={"type": "clearinghouseState", "user": wallet},
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def _fetch_hl_mids(self) -> dict[str, float]:
+        """GET all mid prices from HyperLiquid"""
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                self.HYPERLIQUID_API,
+                json={"type": "allMids"},
+            )
+            resp.raise_for_status()
+            return {k: float(v) for k, v in resp.json().items()}
+
     def _normalize_sub_pot(self, item: dict[str, Any]) -> dict[str, Any]:
         """将 pot-agent API 项扁平化为内部字段"""
         cs = item.get("currentSeason") or {}
@@ -371,6 +468,7 @@ class AIPotCollector:
             "status": item.get("status", "active"),
             "agent_id": str(cs.get("copyTradeAgentId", "")),
             "agent_name": cs.get("copyTradeAgentName", ""),
+            "agent_wallet": cs.get("copyTradeAgentWallet", ""),
             "token_address": cs.get("tokenAddress", ""),
             "token_symbol": cs.get("tokenSymbol", ""),
             "starting_capital": starting_capital,
