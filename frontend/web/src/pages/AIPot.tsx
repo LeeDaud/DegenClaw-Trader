@@ -1,17 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchAIPotRounds, fetchAIPotCouncil, fetchAIPotRaw, triggerScan, type AIPotRound, type CouncilEvaluation } from '../api/client'
 import { RefreshCw } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const tabs = ['Summary', 'Sub-Pots', 'Council', 'Raw Data']
+const AUTO_SCAN_MS = 120_000
 
 export default function AIPot() {
   const [tab, setTab] = useState(0)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const scanMutation = useMutation({
     mutationFn: triggerScan,
     onSuccess: () => {
+      setLastUpdated(new Date().toLocaleTimeString())
       queryClient.invalidateQueries({ queryKey: ['ai-pot-rounds'] })
       queryClient.invalidateQueries({ queryKey: ['ai-pot-council'] })
       queryClient.invalidateQueries({ queryKey: ['agents'] })
@@ -19,15 +22,22 @@ export default function AIPot() {
     },
   })
 
+  // 进入页面自动采集 + 定时采集
+  useEffect(() => {
+    scanMutation.mutate()
+    const id = setInterval(() => scanMutation.mutate(), AUTO_SCAN_MS)
+    return () => clearInterval(id)
+  }, [])
+
   const roundsQuery = useQuery({
     queryKey: ['ai-pot-rounds'],
     queryFn: () => fetchAIPotRounds(5),
-    refetchInterval: 60_000,
+    refetchInterval: 2_000,
   })
   const councilQuery = useQuery({
     queryKey: ['ai-pot-council'],
     queryFn: () => fetchAIPotCouncil(5),
-    refetchInterval: 60_000,
+    refetchInterval: 2_000,
   })
   const rawQuery = useQuery({
     queryKey: ['ai-pot-raw'],
@@ -43,14 +53,19 @@ export default function AIPot() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">AI Pot</h1>
-        <button
-          onClick={() => scanMutation.mutate()}
-          disabled={scanMutation.isPending}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-800 rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw size={14} className={scanMutation.isPending ? 'animate-spin' : ''} />
-          {scanMutation.isPending ? 'Scanning...' : 'Refresh Data'}
-        </button>
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-gray-500">Updated {lastUpdated}</span>
+          )}
+          <button
+            onClick={() => scanMutation.mutate()}
+            disabled={scanMutation.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-800 rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={scanMutation.isPending ? 'animate-spin' : ''} />
+            {scanMutation.isPending ? 'Scanning...' : 'Refresh Data'}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
