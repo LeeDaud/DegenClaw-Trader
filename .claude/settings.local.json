@@ -35,7 +35,10 @@
       "Bash(netstat -ano)",
       "Bash(npm run *)",
       "Bash(ssh *)",
-      "WebFetch(domain:degen.virtuals.io)"
+      "WebFetch(domain:degen.virtuals.io)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
