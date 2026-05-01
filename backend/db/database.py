@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS ai_pot_rounds (
     selected_agents TEXT NOT NULL DEFAULT '[]',
     pot_pnl REAL NOT NULL DEFAULT 0.0,
     season_id TEXT NOT NULL DEFAULT '',
+    season_name TEXT NOT NULL DEFAULT '',
     total_capital REAL NOT NULL DEFAULT 0.0,
     total_current_value REAL NOT NULL DEFAULT 0.0,
     total_realized_pnl REAL NOT NULL DEFAULT 0.0,

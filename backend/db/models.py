@@ -166,6 +166,7 @@ class AIPotRound:
     updated_at: str
     # 以下为后期新增字段（有默认值，兼容旧库）
     season_id: str = ""
+    season_name: str = ""
     total_capital: float = 0.0
     total_current_value: float = 0.0
     total_realized_pnl: float = 0.0
@@ -194,6 +195,7 @@ class AIPotRound:
             created_at=row["created_at"],
             updated_at=row["updated_at"],
             season_id=row.get("season_id", ""),
+            season_name=row.get("season_name", ""),
             total_capital=float(row.get("total_capital", 0)),
             total_current_value=float(row.get("total_current_value", 0)),
             total_realized_pnl=float(row.get("total_realized_pnl", 0)),
