@@ -26,6 +26,7 @@ export default function Dashboard() {
   const pot = dashboard.active_pot_round
   const potReturn = pot ? (pot.return_pct ?? pot.pot_pnl) : 0
   const potReturnLabel = pot ? `${potReturn >= 0 ? '+' : ''}${potReturn.toFixed(2)}%` : '-'
+  const topAgents = (agentsData?.agents || []).slice(0, 10)
 
   return (
     <div className="space-y-6">
