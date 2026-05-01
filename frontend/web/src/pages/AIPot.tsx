@@ -188,6 +188,7 @@ function SubPotsTable({ subPots }: { subPots: AIPotRound['sub_pots'] }) {
           <th className="text-left py-2 px-2">Name</th>
           <th className="text-left py-2 px-2">Agent</th>
           <th className="text-left py-2 px-2">Token</th>
+          <th className="text-left py-2 px-2">Token Address</th>
           <th className="text-right py-2 px-2">Capital</th>
           <th className="text-right py-2 px-2">Value</th>
           <th className="text-right py-2 px-2">Realized</th>
@@ -206,6 +207,13 @@ function SubPotsTable({ subPots }: { subPots: AIPotRound['sub_pots'] }) {
               <td className="py-2 px-2 font-medium">{sp.name}</td>
               <td className="py-2 px-2 text-gray-300">{sp.agent_name}</td>
               <td className="py-2 px-2 font-mono text-gray-400">{sp.token_symbol || '-'}</td>
+              <td className="py-2 px-2 font-mono text-gray-500">
+                {sp.token_address ? (
+                  <span title={sp.token_address} className="cursor-pointer hover:text-gray-200" onClick={() => navigator.clipboard.writeText(sp.token_address)}>
+                    {sp.token_address.slice(0, 6)}...{sp.token_address.slice(-4)}
+                  </span>
+                ) : '-'}
+              </td>
               <td className="py-2 px-2 text-right font-mono">{formatUSD(sp.starting_capital)}</td>
               <td className="py-2 px-2 text-right font-mono">{formatUSD(sp.current_value)}</td>
               <td className={`py-2 px-2 text-right font-mono ${sp.realized_pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{formatUSD(sp.realized_pnl)}</td>
