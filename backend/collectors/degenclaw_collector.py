@@ -327,6 +327,14 @@ class AIPotCollector:
     def _normalize_sub_pot(self, item: dict[str, Any]) -> dict[str, Any]:
         """将 pot-agent API 项扁平化为内部字段"""
         cs = item.get("currentSeason") or {}
+        starting_capital = float(cs.get("startingCapital", 0) or 0)
+        final_pnl = float(cs.get("finalPnl", 0) or 0)
+        api_current_value = float(cs.get("currentValue", 0) or 0)
+        # API 偶发返回 currentValue=0，此时用 capital + finalPnl 推算
+        if api_current_value == 0 and starting_capital + final_pnl != 0:
+            current_value = max(0, starting_capital + final_pnl)
+        else:
+            current_value = api_current_value
         return {
             "sub_pot_id": str(item.get("id", "")),
             "name": item.get("name", ""),
@@ -335,11 +343,11 @@ class AIPotCollector:
             "agent_name": cs.get("copyTradeAgentName", ""),
             "token_address": cs.get("tokenAddress", ""),
             "token_symbol": cs.get("tokenSymbol", ""),
-            "starting_capital": float(cs.get("startingCapital", 0) or 0),
-            "current_value": float(cs.get("currentValue", 0) or 0),
+            "starting_capital": starting_capital,
+            "current_value": current_value,
             "realized_pnl": float(cs.get("realizedPnl", 0) or 0),
             "unrealized_pnl": float(cs.get("unrealizedPnl", 0) or 0),
-            "final_pnl": float(cs.get("finalPnl", 0) or 0),
+            "final_pnl": final_pnl,
             "positions": json.dumps(cs.get("positions", [])),
         }
 

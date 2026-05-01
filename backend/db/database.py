@@ -599,7 +599,10 @@ class Database:
                 ON CONFLICT(round_id, sub_pot_id) DO UPDATE SET
                     name = excluded.name,
                     status = excluded.status,
-                    current_value = excluded.current_value,
+                    current_value = CASE
+                        WHEN excluded.current_value != 0 THEN excluded.current_value
+                        ELSE current_value
+                    END,
                     realized_pnl = excluded.realized_pnl,
                     unrealized_pnl = excluded.unrealized_pnl,
                     final_pnl = excluded.final_pnl,
