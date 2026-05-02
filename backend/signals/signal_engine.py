@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import json
+import math
 from typing import Any
 from uuid import uuid4
 
@@ -59,8 +60,8 @@ class SignalEngine:
             agent_id = agent["agent_id"]
             agent_name = agent["name"]
 
-            # 增加快照数用于趋势检测（6 个 ≈ 5 分钟窗口）
-            snapshots = self.database.get_agent_snapshots(agent_id, limit=6)
+            # 快照数用于趋势检测 + 动态窗口（SNR 低时最多需要 10 个）
+            snapshots = self.database.get_agent_snapshots(agent_id, limit=12)
             if len(snapshots) < 2:
                 continue
 
@@ -119,25 +120,81 @@ class SignalEngine:
     # ── 趋势检测（核心改进）─────────────────────────────────────────
 
     @staticmethod
+    def _calc_snr(values: list[float]) -> float:
+        """计算时间序列的信噪比（基于相邻差值一致度）
+
+        Signal = |mean(diff)|（平均变化幅度）
+        Noise  = std(diff)   （变化方向的波动程度）
+
+        平稳趋势：所有 diff 同号 → 低噪声 → 高 SNR
+        随机波动：diff 正负交替 → 高噪声 → 低 SNR
+        """
+        n = len(values)
+        if n < 3:
+            return 0.0
+        diffs = [values[i + 1] - values[i] for i in range(n - 1)]
+        m = len(diffs)
+        mean_diff = sum(diffs) / m
+        signal = abs(mean_diff)
+        variance = sum((d - mean_diff) ** 2 for d in diffs) / m
+        noise = math.sqrt(variance) if variance > 0 else 1e-10
+        return signal / noise
+
+    @staticmethod
+    def _get_window_config(snr: float) -> tuple[int, float]:
+        """根据 SNR 动态确定窗口大小和一致率阈值
+
+        | SNR 范围 | 窗口 | 一致率 | 含义                     |
+        |----------|------|--------|--------------------------|
+        | ≥ 2.0    | 4    | 0.75   | 趋势极清晰，快速确认     |
+        | ≥ 1.0    | 6    | 0.80   | 趋势明确，标准窗口       |
+        | ≥ 0.5    | 8    | 0.85   | 趋势较弱，拉长确认       |
+        | < 0.5    | 10   | 0.90   | 噪声主导，需要强证据     |
+
+        Returns:
+            (window_size, consistency_threshold)
+        """
+        if snr >= 2.0:
+            return (4, 0.75)
+        elif snr >= 1.0:
+            return (6, 0.80)
+        elif snr >= 0.5:
+            return (8, 0.85)
+        else:
+            return (10, 0.90)
+
     def _detect_trend(
+        self,
         values: list[float],
-        consistency_threshold: float = 0.8,
+        consistency_threshold: float | None = None,
     ) -> tuple[str, float, float]:
         """检测时间序列趋势方向（索引 0 = 最新）
+
+        使用动态窗口：根据信噪比自动调整窗口大小和一致率阈值。
+        高 SNR = 短窗口 + 低一致率（快速响应），
+        低 SNR = 长窗口 + 高一致率（减少误报）。
 
         每对相邻采样计算 diff = older - newer。
         diff > 0：值在改善（排名变小、PnL 增长）
         diff < 0：值在恶化
 
+        Args:
+            values: 时间序列，索引 0 为最新
+            consistency_threshold: 如不传则根据 SNR 动态计算
+
         Returns:
             (direction, consistency_pct, median_magnitude)
-            direction: "up" / "down" / "stable"
         """
+        # 动态窗口配置
+        if consistency_threshold is None:
+            snr = self._calc_snr(values)
+            window_size, consistency_threshold = self._get_window_config(snr)
+            values = values[:window_size]
+
         n = len(values)
         if n < 2:
             return ("stable", 0.0, 0.0)
 
-        # 同 run_check 的 rank_change = prev - latest 一致
         diffs = [values[i + 1] - values[i] for i in range(n - 1)]
 
         total = len(diffs)
@@ -184,11 +241,8 @@ class SignalEngine:
         prev_win_rate = float(prev.get("win_rate", 0) or 0)
         drawdown = float(latest.get("max_drawdown", 0) or 0)
 
-        # ── 排名趋势（替代原来的 2 点比较）──
-        rank_dir, rank_cons, rank_mag = self._detect_trend(
-            rank_values,
-            self.thresholds["rank_trend_consistency"],
-        )
+        # ── 排名趋势（使用动态窗口，基于信噪比调整）──
+        rank_dir, rank_cons, rank_mag = self._detect_trend(rank_values)
         min_rank_mag = self.thresholds["rank_trend_min_magnitude"]
         if self.volatility_tracker is not None:
             min_rank_mag = self.volatility_tracker.get_scaled_threshold(
