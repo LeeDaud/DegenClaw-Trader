@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from db.database import Database
 from db.models import Alert, utc_now_iso
+from signals.signal_state import SignalStateManager, Direction
 
 
 SIGNAL_THRESHOLDS = {
@@ -32,8 +33,9 @@ AGENT_GLOBAL_COOLDOWN_SECONDS = 3600  # 1 小时
 
 
 class SignalEngine:
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: Database, state_manager: SignalStateManager | None = None) -> None:
         self.database = database
+        self.state_manager = state_manager
 
     def run_check(self) -> list[Alert]:
         """对所有 Agent 执行一轮信号检测，返回新生成的预警
@@ -64,8 +66,28 @@ class SignalEngine:
 
             # 分析各维度信号
             signals = self._analyze(agent_id, agent_name, latest, prev, market, snapshots)
+
+            # --- 方向确认（通过 StateManager）---
+            if self.state_manager is not None and signals:
+                # EMA 平滑：对 combined 信号做分数平滑
+                for sig in list(signals):
+                    if sig["type"] in ("combined_surge", "combined_dump"):
+                        smoothed = self.state_manager.get_smoothed_score(agent_id, sig["score"])
+                        threshold = SIGNAL_THRESHOLDS.get("combined_surge_score", 35)
+                        if smoothed < threshold:
+                            signals.remove(sig)
+
             if not signals:
                 continue
+
+            # 方向确认计数
+            if self.state_manager is not None:
+                direction, raw_score = self._infer_direction(signals)
+                confirmed, adj_dir, _ = self.state_manager.record_reading(
+                    agent_id, "agent", direction, raw_score,
+                )
+                if not confirmed:
+                    continue
 
             # --- 聚合策略 ---
             # 同 Agent 的所有信号合并为一条预警，冷却判定以"任一类型最近触发"为准
@@ -76,6 +98,9 @@ class SignalEngine:
             alert = self._build_aggregated_alert(agent_id, agent_name, signals, latest, prev, market, now)
             if alert:
                 self.database.insert_alert(alert, cooldown_seconds=ALERT_COOLDOWN_SECONDS)
+                # 通知 StateManager 方向已推送（后续 can_notify 会据此拦截相反方向）
+                if self.state_manager is not None and direction:
+                    self.state_manager.mark_notified(agent_id, direction)
                 alerts.append(alert)
 
         return alerts
@@ -175,6 +200,26 @@ class SignalEngine:
             created_at=now,
         )
         return alert
+
+    @staticmethod
+    def _infer_direction(signals: list[dict]) -> tuple[Direction | None, float]:
+        """从信号列表中推断整体方向
+
+        按看涨/看跌信号的总分比较，高分者获胜。
+        Returns:
+            (direction, total_score) — direction 为 None 表示中性
+        """
+        bullish_types = {"surge", "rank_surge", "price_surge", "combined_surge", "wr_surge"}
+        bearish_types = {"dump", "rank_dump", "price_dump", "combined_dump", "wr_dump"}
+
+        bull_score = sum(s["score"] for s in signals if s["type"] in bullish_types)
+        bear_score = sum(s["score"] for s in signals if s["type"] in bearish_types)
+
+        if bull_score > bear_score and bull_score > 0:
+            return ("bullish", bull_score)
+        elif bear_score > bull_score and bear_score > 0:
+            return ("bearish", bear_score)
+        return (None, 0.0)
 
     def _has_recent_alert(self, agent_id: str, alert_type: str) -> bool:
         """检查冷却期内是否已存在同类预警（保留供兼容，但 run_check 改用 _agent_can_alert）"""

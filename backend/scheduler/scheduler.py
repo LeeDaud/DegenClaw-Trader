@@ -16,6 +16,7 @@ from notifiers.feishu_notifier import FeishuNotifier
 from parsers.degenclaw_parser import DegenClawParser
 from scoring.engine import DegenClawScoreEngine
 from signals.signal_engine import SignalEngine
+from signals.signal_state import SignalStateManager
 from decision.event_window import EventWindowManager
 from decision.engine import TradingDecisionEngine, DecisionInput
 from decision.paper_trader import PaperTrader, PaperPosition
@@ -27,9 +28,9 @@ except ModuleNotFoundError:
 
 logger = logging.getLogger(__name__)
 
-# Pot PnL 通知冷却：同一 sub_pot 5 分钟内不重复推送
+# Pot PnL 通知冷却：同一 sub_pot 15 分钟内不重复推送（次要防线，主防线在 SignalStateManager）
 _pot_pnl_cooldown: dict[str, float] = {}
-_POT_PNL_COOLDOWN_SECONDS = 300
+_POT_PNL_COOLDOWN_SECONDS = 900
 
 
 async def run_collection(database: Database, settings: Settings) -> dict[str, int]:
@@ -42,6 +43,9 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
     now = utc_now_iso()
 
     summary = {"agents": 0, "tokens": 0, "pot": 0}
+
+    # 信号状态管理器（贯穿本次采集周期的所有信号检测）
+    state_manager = SignalStateManager()
 
     try:
         # 1. 采集 Agent 排行榜
@@ -214,7 +218,7 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
 
             # 3d. PnL 监控 — 对比快照 → 飞书通知
             if settings.pot_monitor_enabled and sub_pots and settings.feishu_alerts_enabled:
-                monitor = PotPnlMonitor(database)
+                monitor = PotPnlMonitor(database, state_manager)
                 changes = monitor.check_sub_pot_changes(
                     round_id=pot_status["round_id"],
                     sub_pots=sub_pots,
@@ -227,23 +231,37 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
                         sent = 0
                         skipped_tier = 0
                         skipped_cooldown = 0
+                        skipped_direction = 0
                         for c in changes:
                             # 仅推送 warning+ 级别
                             if c.get("tier", "info") == "info":
                                 skipped_tier += 1
                                 continue
-                            # 同一 sub_pot 冷却期内不重复
+                            # 方向冷却检查（通过 StateManager）
                             spid = c["sub_pot_id"]
+                            raw_dir = c.get("direction", "stable")
+                            bullbear: str | None = None
+                            if raw_dir in ("up", "steep_up", "recovery_up"):
+                                bullbear = "bullish"
+                            elif raw_dir in ("down", "steep_down", "pullback_down"):
+                                bullbear = "bearish"
+                            if bullbear is not None and not state_manager.can_notify(spid, bullbear):
+                                skipped_direction += 1
+                                continue
+                            # 同一 sub_pot 冷却期内不重复（次要防线）
                             last = _pot_pnl_cooldown.get(spid, 0)
                             if now - last < _POT_PNL_COOLDOWN_SECONDS:
                                 skipped_cooldown += 1
                                 continue
                             _pot_pnl_cooldown[spid] = now
+                            if bullbear is not None:
+                                state_manager.mark_notified(spid, bullbear)
                             card = PotPnlMonitor.build_feishu_card(c)
                             notifier.send_card(card, title=f"Pot PnL {c['name']}")
                             sent += 1
                         if sent:
-                            logger.info("Pot PnL 监控: %d 条推送 (info跳过=%d, 冷却跳过=%d)", sent, skipped_tier, skipped_cooldown)
+                            logger.info("Pot PnL 监控: %d 条推送 (info跳过=%d, 冷却跳过=%d, 方向冷却=%d)",
+                                        sent, skipped_tier, skipped_cooldown, skipped_direction)
 
         # 记录成功事件
         database.insert_system_event(SystemEvent(
@@ -257,7 +275,7 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
         ))
 
         # 4. 运行信号检测
-        signal_engine = SignalEngine(database)
+        signal_engine = SignalEngine(database, state_manager)
         new_alerts = signal_engine.run_check()
         if new_alerts:
             logger.info("信号检测完成: 生成 %d 条预警", len(new_alerts))

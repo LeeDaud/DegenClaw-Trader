@@ -8,6 +8,7 @@ from typing import Any
 
 from config.settings import Settings
 from db.database import Database
+from signals.signal_state import SignalStateManager, Direction
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +36,9 @@ _TIER_CALLOUTS = {
 class PotPnlMonitor:
     """监控 PotSubAgent 的 PnL 变化，输出按严重度分级的信号告警"""
 
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: Database, state_manager: SignalStateManager | None = None) -> None:
         self.database = database
+        self.state_manager = state_manager
 
     # ----------------------------------------------------------------
     # 公共入口
@@ -51,7 +53,7 @@ class PotPnlMonitor:
         """主入口：遍历 sub_pot → 抑制门 → 等级判定 → 信号评分"""
         changes: list[dict[str, Any]] = []
         for sp in sub_pots:
-            snapshots = self.database.get_pot_pnl_snapshots(sp["sub_pot_id"], limit=4)
+            snapshots = self.database.get_pot_pnl_snapshots(sp["sub_pot_id"], limit=6)
             if len(snapshots) < 2:
                 continue
 
@@ -73,6 +75,24 @@ class PotPnlMonitor:
                 continue
 
             direction = self._predict_direction(snapshots, starting)
+
+            # --- 方向确认（通过 StateManager）---
+            if self.state_manager is not None:
+                # 映射方向分类
+                bullbear: Direction | None
+                if direction in ("up", "steep_up", "recovery_up"):
+                    bullbear = "bullish"
+                elif direction in ("down", "steep_down", "pullback_down"):
+                    bullbear = "bearish"
+                else:
+                    bullbear = None
+                confirmed, adj_dir, _ = self.state_manager.record_reading(
+                    sp["sub_pot_id"], "sub_pot", bullbear, abs(pnl_change_pct),
+                )
+                if not confirmed:
+                    # 方向尚未确认，跳过本轮
+                    continue
+
             tier = self._compute_severity_tier(
                 pnl_change_pct, abs(roi_change),
                 prev["final_pnl"], latest["final_pnl"],
@@ -110,8 +130,8 @@ class PotPnlMonitor:
 
     @staticmethod
     def _predict_direction(snapshots: list[dict[str, Any]], capital: float = 0) -> str:
-        """增强方向判定：3 点趋势 + 斜坡陡峭分类"""
-        pnls = [s["final_pnl"] for s in snapshots[:3]]
+        """增强方向判定：5 点趋势 + 斜坡陡峭分类"""
+        pnls = [s["final_pnl"] for s in snapshots[:5]]
         n = len(pnls)
         if n < 2:
             return "stable"
