@@ -18,7 +18,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/agents" element={<AgentList />} />
         <Route path="/agents/:agentId" element={<AgentDetail />} />
-        <Route path="/tokens" element={<TokenMarket />} />
+        <Route path="/calibration" element={<TokenMarket />} />
         <Route path="/alerts" element={<Alerts />} />
         <Route path="/signals" element={<Signals />} />
         <Route path="/positions" element={<Positions />} />

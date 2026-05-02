@@ -233,6 +233,7 @@ export interface CalibrationApproachStatus {
   name: string
   enabled: boolean
   status: string
+  description?: string | null
   last_check_at?: string | null
   last_run_at?: string | null
   stats?: { checked: number; correct: number; wrong: number; skipped: number } | null
@@ -240,7 +241,23 @@ export interface CalibrationApproachStatus {
   pending_evaluations?: number | null
   f1_old?: number | null
   f1_new?: number | null
-  description?: string | null
+  windows?: Record<string, string> | null
+  scale_range?: { min: string; max: string } | null
+  metrics?: string[] | null
+  snr_config?: Array<{ snr: string; window: number; consistency: string; meaning: string }> | null
+  history?: CalibrationHistoryRecord[] | null
+}
+
+export interface CalibrationHistoryRecord {
+  id: number
+  calibrated_at: string
+  f1_score: number
+  precision: number
+  recall: number
+  total_signals: number
+  baseline_f1: number
+  active: number
+  params?: string
 }
 
 export interface CalibrationStatus {
@@ -251,7 +268,9 @@ export interface CalibrationStatus {
   auto_tune: {
     last_run_at: string | null
     last_adjustments: string[] | null
+    bounds: { lower: number; upper: number }
   }
+  config: Record<string, string>
 }
 
 export async function fetchSignals(limit = 50, status?: string) {

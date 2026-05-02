@@ -149,6 +149,7 @@ export default function Dashboard() {
             <h2 className="text-sm font-semibold mb-2 text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
               <BarChart3 size={14} />
               Self-Calibration
+              <a href="/calibration" className="ml-auto text-[10px] text-gray-500 hover:text-gray-300 transition-colors">Detail →</a>
             </h2>
             {!calStatus ? (
               <div className="text-xs text-gray-500">Loading...</div>
@@ -157,21 +158,24 @@ export default function Dashboard() {
                 <CalibrationRow
                   label="A: Outcome Tracking"
                   badge={calStatus.approach_a.stats
-                    ? `${calStatus.approach_a.stats.correct}/${calStatus.approach_a.stats.checked} ok`
+                    ? `${calStatus.approach_a.stats.correct}/${calStatus.approach_a.stats.checked} correct`
                     : calStatus.approach_a.pending_evaluations ? `${calStatus.approach_a.pending_evaluations} pending` : 'active'}
                   lastRun={calStatus.approach_a.last_check_at}
-                  status={calStatus.approach_a.status}
-                  hitRate={calStatus.approach_a.hit_rates?.surge}
+                  subline={
+                    calStatus.approach_a.hit_rates && Object.keys(calStatus.approach_a.hit_rates).length > 0
+                      ? `Surge: ${calStatus.approach_a.hit_rates.surge ?? '-'}% | Dump: ${calStatus.approach_a.hit_rates.dump ?? '-'}%`
+                      : undefined
+                  }
                 />
                 <CalibrationRow
                   label="B: Adaptive Thresholds"
                   badge="active"
-                  status={calStatus.approach_b.status}
+                  subline="Scale: 0.5x–3.0x"
                 />
                 <CalibrationRow
                   label="C: Dynamic Window"
                   badge="active"
-                  status={calStatus.approach_c.status}
+                  subline="SNR-driven: 4–10 snapshots"
                 />
                 <CalibrationRow
                   label="D: Full Calibration"
@@ -179,7 +183,6 @@ export default function Dashboard() {
                     ? `F1 ${calStatus.approach_d.f1_new.toFixed(3)}`
                     : 'pending'}
                   lastRun={calStatus.approach_d.last_run_at}
-                  status={calStatus.approach_d.status}
                   f1Old={calStatus.approach_d.f1_old}
                   f1New={calStatus.approach_d.f1_new}
                 />
@@ -214,27 +217,24 @@ function CalibrationRow({
   label,
   badge,
   lastRun,
-  status,
-  hitRate,
+  subline,
   f1Old,
   f1New,
 }: {
   label: string
   badge?: string
   lastRun?: string | null
-  status?: string
-  hitRate?: number | null
+  subline?: string
   f1Old?: number | null
   f1New?: number | null
 }) {
+  const delta = f1Old != null && f1New != null ? ((f1New - f1Old) / f1Old * 100) : null
   return (
     <div className="text-xs border-b border-gray-800/50 last:border-0 pb-1.5 last:pb-0">
       <div className="flex items-center justify-between">
         <span className="text-gray-300">{label}</span>
-        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-          status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'
-        }`}>
-          {badge || status || 'active'}
+        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400">
+          {badge || 'active'}
         </span>
       </div>
       <div className="flex items-center gap-2 mt-0.5 text-gray-500">
@@ -244,14 +244,10 @@ function CalibrationRow({
             {new Date(lastRun).toLocaleTimeString()}
           </span>
         )}
-        {hitRate != null && (
-          <span className="text-gray-400">
-            Surge: {hitRate}%
-          </span>
-        )}
-        {f1Old != null && f1New != null && (
-          <span className={f1New >= f1Old ? 'text-emerald-400' : 'text-red-400'}>
-            F1: {f1Old.toFixed(3)} → {f1New.toFixed(3)}
+        {subline && <span>{subline}</span>}
+        {delta != null && (
+          <span className={delta >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+            F1: {f1Old!.toFixed(3)} → {f1New!.toFixed(3)} ({delta > 0 ? '+' : ''}{delta.toFixed(1)}%)
           </span>
         )}
       </div>

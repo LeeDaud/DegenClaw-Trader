@@ -478,38 +478,58 @@ async def get_calibration_status(request: Request) -> dict[str, Any]:
             hit_rates[st] = round(hr * 100, 1)
     pending_count = database.count_pending_outcomes()
 
+    # 方案 D：校准历史
+    cal_history = database.get_calibration_history(limit=5)
+
+    # 当前信号配置阈值
+    current_config = database.get_all_config()
+
     return _api_ok({
         "approach_a": {
             "name": "Outcome Tracking",
             "enabled": True,
             "status": "active",
+            "description": "记录每一条预警的预测结果，15 分钟周期回检判定正确性，每天凌晨 3:00 根据命中率自动调整阈值",
             "last_check_at": cal.get("outcome_check", {}).get("last_run_at"),
             "stats": cal.get("outcome_check", {}).get("stats"),
             "hit_rates": hit_rates,
             "pending_evaluations": pending_count,
+            "windows": {"surge/dump": "30min", "combined": "1h", "wr": "2h"},
         },
         "approach_b": {
             "name": "Agent Adaptive Thresholds",
             "enabled": True,
             "status": "active",
-            "description": "按 Agent 历史波动动态缩放信号阈值",
+            "description": "追踪每个 Agent 的排名/PnL/胜率历史波动率，高波动 Agent 自动放大阈值减少误报，低波动 Agent 缩小阈值提高灵敏度",
+            "scale_range": {"min": "0.5x", "max": "3.0x"},
+            "metrics": ["rank_volatility", "pnl_volatility", "wr_volatility"],
         },
         "approach_c": {
             "name": "Dynamic SNR Window",
             "enabled": True,
             "status": "active",
-            "description": "按信噪比动态调整趋势检测窗口",
+            "description": "计算快照序列的信噪比(SNR)，高 SNR 用短窗口快速确认趋势，低 SNR 用长窗口加严一致率等待强证据",
+            "snr_config": [
+                {"snr": "≥ 2.0", "window": 4, "consistency": "75%", "meaning": "趋势极清晰，快速确认"},
+                {"snr": "≥ 1.0", "window": 6, "consistency": "80%", "meaning": "趋势明确，标准窗口"},
+                {"snr": "≥ 0.5", "window": 8, "consistency": "85%", "meaning": "趋势较弱，拉长确认"},
+                {"snr": "< 0.5", "window": 10, "consistency": "90%", "meaning": "噪声主导，需要强证据"},
+            ],
         },
         "approach_d": {
             "name": "Full Calibration",
             "enabled": True,
             "status": "active",
+            "description": "基于历史 7 天快照数据运行参数搜索回测，Phase 1 逐类型优化 + Phase 2 联合精调 + F1 退化保护(≤5%)，每天凌晨 2:00 执行",
             "last_run_at": cal.get("full_calibration", {}).get("last_run_at"),
             "f1_old": cal.get("full_calibration", {}).get("f1_old"),
             "f1_new": cal.get("full_calibration", {}).get("f1_new"),
+            "history": cal_history,
         },
         "auto_tune": {
             "last_run_at": cal.get("auto_tune", {}).get("last_run_at"),
             "last_adjustments": cal.get("auto_tune", {}).get("last_adjustments"),
+            "bounds": {"lower": 40, "upper": 75},
         },
+        "config": current_config,
     })

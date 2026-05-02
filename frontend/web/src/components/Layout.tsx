@@ -1,10 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Activity, Users, Coins, FileText, BarChart3, AlertTriangle, Zap, Briefcase, TrendingUp, Database } from 'lucide-react'
+import { Activity, Users, BarChart3, FileText, AlertTriangle, Zap, Briefcase, TrendingUp, Database } from 'lucide-react'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: BarChart3 },
   { path: '/agents', label: 'Agents', icon: Users },
-  { path: '/tokens', label: 'Tokens', icon: Coins },
+  { path: '/calibration', label: 'Calibration', icon: Activity },
   { path: '/ai-pot', label: 'AI Pot', icon: Database },
   { path: '/alerts', label: 'Alerts', icon: AlertTriangle },
   { path: '/signals', label: 'Signals', icon: Zap },

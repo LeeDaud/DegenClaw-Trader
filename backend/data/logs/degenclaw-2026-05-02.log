@@ -9,3 +9,43 @@
 2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_auto_tune" to job store "default"
 2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_full_calibration" to job store "default"
 2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Scheduler started
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_scan" to job store "default"
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_signal_gen" to job store "default"
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_outcome_check" to job store "default"
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_auto_tune" to job store "default"
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_full_calibration" to job store "default"
+2026-05-02 15:14:10 | INFO    | apscheduler.schedulers.base | Scheduler started
+2026-05-02 15:14:12 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-05-02 15:14:12 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-05-02 15:14:12 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-05-02 15:14:12 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-05-02 15:14:12 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-05-02 15:14:13 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-05-02 15:14:13 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-05-02 15:14:16 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-05-02 15:14:16 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-05-02 15:14:16 | INFO    | scheduler.scheduler | 赛季过滤: 移除 246 个非当季 Agent (剩 86)，排名已重分配
+2026-05-02 15:14:17 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/pot-agents "HTTP/1.1 200 "
+2026-05-02 15:14:25 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:25 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:25 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:25 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:25 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:25 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:25 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:25 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:26 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:26 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:27 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-02 15:14:30 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/council?seasonId=53 "HTTP/1.1 404 "
+2026-05-02 15:14:30 | WARNING | collectors.degenclaw_collector | fetch council (seasonId=53) failed: Client error '404 ' for url 'https://degen.virtuals.io/api/council?seasonId=53'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-05-02 15:14:33 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/council/seasons "HTTP/1.1 200 "
+2026-05-02 15:14:35 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/council?seasonId=52 "HTTP/1.1 200 "
+2026-05-02 15:14:39 | INFO    | scoring.engine | 评分完成: 86 个 Agent
+2026-05-02 15:14:39 | INFO    | scheduler.scheduler | 评分完成: 86 个 Agent
