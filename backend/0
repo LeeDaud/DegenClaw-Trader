@@ -1,4 +1,0 @@
-  File "<string>", line 135
-    print('_detect_trend treats diff
-          ^
-SyntaxError: unterminated string literal (detected at line 135)
