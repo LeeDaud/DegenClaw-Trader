@@ -40,10 +40,12 @@ ALERT_COOLDOWN_SECONDS = 21600  # 6 小时
 
 class SignalEngine:
     def __init__(self, database: Database, state_manager: SignalStateManager | None = None,
-                 thresholds: dict | None = None, outcome_tracker: Any = None) -> None:
+                 thresholds: dict | None = None, outcome_tracker: Any = None,
+                 volatility_tracker: Any = None) -> None:
         self.database = database
         self.state_manager = state_manager
         self.outcome_tracker = outcome_tracker
+        self.volatility_tracker = volatility_tracker
         self.thresholds = {**SIGNAL_THRESHOLDS, **(thresholds or {})}
 
     # ── 主入口 ─────────────────────────────────────────────────────
@@ -167,6 +169,10 @@ class SignalEngine:
     ) -> list[dict[str, Any]]:
         signals: list[dict[str, Any]] = []
 
+        # 刷新该 Agent 的波动率缓存
+        if self.volatility_tracker is not None:
+            self.volatility_tracker.refresh([agent_id])
+
         # ── 提取快照时间序列 ──
         rank_values = [float(s.get("rank", 0) or 0) for s in snapshots]
         pnl_7d_values = [float(s.get("pnl_7d", 0) or 0) for s in snapshots]
@@ -184,6 +190,10 @@ class SignalEngine:
             self.thresholds["rank_trend_consistency"],
         )
         min_rank_mag = self.thresholds["rank_trend_min_magnitude"]
+        if self.volatility_tracker is not None:
+            min_rank_mag = self.volatility_tracker.get_scaled_threshold(
+                agent_id, "rank", min_rank_mag,
+            )
 
         if rank_dir == "up" and rank_mag >= min_rank_mag:
             signals.append({
@@ -213,7 +223,12 @@ class SignalEngine:
 
         # ── PnL 暴涨/暴跌 ──
         # 24h PnL 绝对值检测（趋势检测作为辅助确认）
-        if pnl_24h >= self.thresholds["pnl_surge_min_24h"]:
+        pnl_surge_threshold = self.thresholds["pnl_surge_min_24h"]
+        if self.volatility_tracker is not None:
+            pnl_surge_threshold = self.volatility_tracker.get_scaled_threshold(
+                agent_id, "pnl", pnl_surge_threshold,
+            )
+        if pnl_24h >= pnl_surge_threshold:
             # pnl_7d 趋势确认：取反解决 _detect_trend 设计为 rank（越小越好）的符号问题
             pnl_dir, _, _ = self._detect_trend([-v for v in pnl_7d_values])
             if pnl_dir in ("up", "stable"):
@@ -225,7 +240,12 @@ class SignalEngine:
                     "score": pnl_24h * 2,
                 })
 
-        if pnl_24h <= self.thresholds["pnl_dump_max_24h"]:
+        pnl_dump_threshold = self.thresholds["pnl_dump_max_24h"]
+        if self.volatility_tracker is not None:
+            pnl_dump_threshold = self.volatility_tracker.get_scaled_threshold(
+                agent_id, "pnl", pnl_dump_threshold,
+            )
+        if pnl_24h <= pnl_dump_threshold:
             pnl_dir, _, _ = self._detect_trend([-v for v in pnl_7d_values])
             if pnl_dir in ("down", "stable"):
                 signals.append({
@@ -246,6 +266,13 @@ class SignalEngine:
         # ── win_rate 趋势分析 ──
         wr_surge_min = self.thresholds.get("wr_surge_min", 8.0)
         wr_dump_max = self.thresholds.get("wr_dump_max", -8.0)
+        if self.volatility_tracker is not None:
+            wr_surge_min = self.volatility_tracker.get_scaled_threshold(
+                agent_id, "wr", wr_surge_min,
+            )
+            wr_dump_max = self.volatility_tracker.get_scaled_threshold(
+                agent_id, "wr", wr_dump_max,
+            )
 
         wr_total_change: float = win_rate - prev_win_rate
         wr_trend_detail = f"{prev_win_rate}%→{win_rate}%"
@@ -275,6 +302,11 @@ class SignalEngine:
         combined_up = 0
         combined_up_reasons: list[str] = []
 
+        # 归一化排名波动（高波动 Agent 同等变化降权）
+        norm_rank_mag = rank_mag
+        if self.volatility_tracker is not None:
+            norm_rank_mag = self.volatility_tracker.get_normalized_score(agent_id, rank_mag)
+
         if wr_total_change > 0:
             wr_pts = min(wr_total_change * 2, 20)
             combined_up += wr_pts
@@ -284,8 +316,8 @@ class SignalEngine:
             combined_up += 5
             combined_up_reasons.append(f"7d PnL 改善 ({prev_pnl_7d:+.1f}→{pnl_7d:+.1f})")
         if rank_dir == "up":
-            combined_up += rank_mag * 1.5
-            combined_up_reasons.append(f"排名趋势↑({rank_mag:.0f}/轮)")
+            combined_up += norm_rank_mag * 1.5
+            combined_up_reasons.append(f"排名趋势↑({rank_mag:.0f}/轮, 归一化{norm_rank_mag:.1f})")
         if pnl_24h > 10:
             combined_up += 5
             combined_up_reasons.append(f"24h PnL 强劲 (+{pnl_24h}%)")
@@ -316,8 +348,8 @@ class SignalEngine:
             combined_down += 5
             combined_down_reasons.append(f"7d PnL 恶化 ({prev_pnl_7d:+.1f}→{pnl_7d:+.1f})")
         if rank_dir == "down":
-            combined_down += rank_mag * 1.5
-            combined_down_reasons.append(f"排名趋势↓({rank_mag:.0f}/轮)")
+            combined_down += norm_rank_mag * 1.5
+            combined_down_reasons.append(f"排名趋势↓({rank_mag:.0f}/轮, 归一化{norm_rank_mag:.1f})")
         if pnl_24h < -5:
             combined_down += 5
             combined_down_reasons.append(f"24h PnL 为负 ({pnl_24h}%)")

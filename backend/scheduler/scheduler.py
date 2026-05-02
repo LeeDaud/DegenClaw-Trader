@@ -16,6 +16,7 @@ from notifiers.feishu_notifier import FeishuNotifier
 from parsers.degenclaw_parser import DegenClawParser
 from scoring.engine import DegenClawScoreEngine
 from calibration.outcome_tracker import OutcomeTracker
+from calibration.agent_volatility import AgentVolatilityTracker
 from signals.signal_engine import SignalEngine
 from signals.signal_state import SignalStateManager
 from decision.event_window import EventWindowManager
@@ -289,7 +290,11 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
             db_config = {}
             logger.warning("加载信号配置失败，使用默认值", exc_info=True)
 
-        signal_engine = SignalEngine(database, state_manager, thresholds=db_config, outcome_tracker=outcome_tracker)
+        volatility_tracker = AgentVolatilityTracker(database)
+        volatility_tracker.refresh()
+        signal_engine = SignalEngine(database, state_manager, thresholds=db_config,
+                                     outcome_tracker=outcome_tracker,
+                                     volatility_tracker=volatility_tracker)
         new_alerts = signal_engine.run_check()
         if new_alerts:
             logger.info("信号检测完成: 生成 %d 条预警", len(new_alerts))
