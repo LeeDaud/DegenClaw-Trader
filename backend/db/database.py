@@ -12,6 +12,7 @@ from db.models import (
     TradeSignalModel, PaperPositionModel,
     PotSubAgent, CouncilEvaluation, CouncilAgentScore,
     PotPnlSnapshot, CouncilLeaderboardScore,
+    SignalOutcome, utc_now_iso,
 )
 
 
@@ -250,6 +251,27 @@ CREATE TABLE IF NOT EXISTS paper_positions (
     time_exit_hours INTEGER NOT NULL DEFAULT 48,
     status TEXT NOT NULL DEFAULT 'open'
 );
+
+CREATE TABLE IF NOT EXISTS signal_outcomes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alert_id TEXT NOT NULL UNIQUE,
+    agent_id TEXT NOT NULL,
+    signal_type TEXT NOT NULL,
+    direction TEXT NOT NULL,
+    score REAL NOT NULL DEFAULT 0,
+    params_snapshot TEXT NOT NULL DEFAULT '{}',
+    predicted_at TEXT NOT NULL,
+    evaluated_at TEXT,
+    outcome INTEGER,
+    outcome_detail TEXT
+);
+
+CREATE TABLE IF NOT EXISTS signal_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    config_key TEXT NOT NULL UNIQUE,
+    config_value TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 INDEXES_SQL = """
@@ -283,6 +305,9 @@ CREATE INDEX IF NOT EXISTS idx_signals_time ON trade_signals(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_signals_status ON trade_signals(status);
 CREATE INDEX IF NOT EXISTS idx_positions_agent ON paper_positions(agent_id);
 CREATE INDEX IF NOT EXISTS idx_positions_status ON paper_positions(status);
+CREATE INDEX IF NOT EXISTS idx_outcomes_pending ON signal_outcomes(evaluated_at) WHERE evaluated_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_outcomes_type ON signal_outcomes(signal_type);
+CREATE INDEX IF NOT EXISTS idx_outcomes_agent ON signal_outcomes(agent_id);
 """
 
 
@@ -300,6 +325,11 @@ class Database:
 
     def init_db(self) -> None:
         with self._connect() as conn:
+            # 迁移：signal_outcomes 移除 FOREIGN KEY 约束（旧表需重建）
+            try:
+                conn.execute("DROP TABLE IF EXISTS signal_outcomes")
+            except sqlite3.OperationalError:
+                pass
             conn.executescript(TABLES_SQL)
             conn.executescript(INDEXES_SQL)
             # 迁移：ai_pot_rounds 新字段
@@ -331,6 +361,29 @@ class Database:
                 conn.execute("ALTER TABLE agent_snapshots ADD COLUMN total_realized_pnl REAL NOT NULL DEFAULT 0.0")
             except sqlite3.OperationalError:
                 pass
+            # 预填充 signal_config 默认值
+            existing = conn.execute("SELECT COUNT(*) FROM signal_config").fetchone()[0]
+            if existing == 0:
+                defaults = [
+                    ("pnl_surge_min_24h", "15.0"),
+                    ("pnl_dump_max_24h", "-12.0"),
+                    ("rank_trend_min_magnitude", "3"),
+                    ("rank_trend_consistency", "0.8"),
+                    ("wr_surge_min", "8.0"),
+                    ("wr_dump_max", "-8.0"),
+                    ("combined_surge_score", "35"),
+                    ("combined_dump_score", "35"),
+                    ("confirmation_count", "3"),
+                    ("direction_cooldown", "1800"),
+                    ("hit_rate_lower_bound", "40"),
+                    ("hit_rate_upper_bound", "75"),
+                ]
+                now = utc_now_iso()
+                for key, val in defaults:
+                    conn.execute(
+                        "INSERT INTO signal_config (config_key, config_value, updated_at) VALUES (?, ?, ?)",
+                        (key, val, now),
+                    )
             conn.commit()
 
     # --- Agent ---
@@ -1084,3 +1137,74 @@ class Database:
                 "SELECT * FROM paper_positions WHERE status = 'open' ORDER BY entered_at DESC",
             ).fetchall()
         return [dict(r) for r in rows]
+
+    # --- Signal Outcomes ---
+
+    def insert_signal_outcome(self, outcome: SignalOutcome) -> None:
+        with self._connect() as conn:
+            try:
+                conn.execute(
+                    """INSERT OR IGNORE INTO signal_outcomes
+                       (alert_id, agent_id, signal_type, direction, score, params_snapshot,
+                        predicted_at, evaluated_at, outcome, outcome_detail)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (outcome.alert_id, outcome.agent_id, outcome.signal_type, outcome.direction,
+                     outcome.score, outcome.params_snapshot, outcome.predicted_at,
+                     outcome.evaluated_at, outcome.outcome, outcome.outcome_detail),
+                )
+                conn.commit()
+            except sqlite3.IntegrityError:
+                pass
+
+    def get_pending_outcomes(self, limit: int = 50) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM signal_outcomes WHERE evaluated_at IS NULL ORDER BY predicted_at ASC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def update_outcome(self, outcome_id: int, outcome: int, detail: str, evaluated_at: str) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE signal_outcomes SET outcome = ?, outcome_detail = ?, evaluated_at = ? WHERE id = ?",
+                (outcome, detail, evaluated_at, outcome_id),
+            )
+            conn.commit()
+
+    def get_hit_rate(self, signal_type: str, since: str) -> float | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                """SELECT
+                    CAST(SUM(CASE WHEN outcome = 1 THEN 1 ELSE 0 END) AS REAL) AS correct,
+                    CAST(COUNT(*) AS REAL) AS total
+                   FROM signal_outcomes
+                   WHERE signal_type = ? AND predicted_at >= ? AND outcome IN (0, 1)""",
+                (signal_type, since),
+            ).fetchone()
+        if row and row["total"] > 0:
+            return round(row["correct"] / row["total"] * 100, 1)
+        return None
+
+    # --- Signal Config ---
+
+    def get_config(self, key: str) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT config_value FROM signal_config WHERE config_key = ?", (key,),
+            ).fetchone()
+        return row["config_value"] if row else None
+
+    def set_config(self, key: str, value: str) -> None:
+        now = utc_now_iso()
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO signal_config (config_key, config_value, updated_at) VALUES (?, ?, ?)",
+                (key, value, now),
+            )
+            conn.commit()
+
+    def get_all_config(self) -> dict[str, str]:
+        with self._connect() as conn:
+            rows = conn.execute("SELECT config_key, config_value FROM signal_config").fetchall()
+        return {r["config_key"]: r["config_value"] for r in rows}

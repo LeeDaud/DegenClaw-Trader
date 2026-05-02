@@ -39,9 +39,12 @@ ALERT_COOLDOWN_SECONDS = 21600  # 6 小时
 
 
 class SignalEngine:
-    def __init__(self, database: Database, state_manager: SignalStateManager | None = None) -> None:
+    def __init__(self, database: Database, state_manager: SignalStateManager | None = None,
+                 thresholds: dict | None = None, outcome_tracker: Any = None) -> None:
         self.database = database
         self.state_manager = state_manager
+        self.outcome_tracker = outcome_tracker
+        self.thresholds = {**SIGNAL_THRESHOLDS, **(thresholds or {})}
 
     # ── 主入口 ─────────────────────────────────────────────────────
 
@@ -73,7 +76,7 @@ class SignalEngine:
                 for sig in list(signals):
                     if sig["type"] in ("combined_surge", "combined_dump"):
                         smoothed = self.state_manager.get_smoothed_score(agent_id, sig["score"])
-                        threshold = SIGNAL_THRESHOLDS.get("combined_surge_score", 35)
+                        threshold = self.thresholds.get("combined_surge_score", 35)
                         if smoothed < threshold:
                             signals.remove(sig)
 
@@ -98,6 +101,15 @@ class SignalEngine:
                 self.database.insert_alert(alert, cooldown_seconds=ALERT_COOLDOWN_SECONDS)
                 if self.state_manager is not None and direction:
                     self.state_manager.mark_notified(agent_id, direction)
+                # 记录 outcome source
+                if self.outcome_tracker is not None:
+                    params_snapshot = {
+                        k: self.thresholds.get(k) for k in (
+                            "pnl_surge_min_24h", "pnl_dump_max_24h", "rank_trend_min_magnitude",
+                            "combined_surge_score", "combined_dump_score",
+                        )
+                    }
+                    self.outcome_tracker.record_outcome_source(alert, params_snapshot)
                 alerts.append(alert)
 
         return alerts
@@ -169,9 +181,9 @@ class SignalEngine:
         # ── 排名趋势（替代原来的 2 点比较）──
         rank_dir, rank_cons, rank_mag = self._detect_trend(
             rank_values,
-            SIGNAL_THRESHOLDS["rank_trend_consistency"],
+            self.thresholds["rank_trend_consistency"],
         )
-        min_rank_mag = SIGNAL_THRESHOLDS["rank_trend_min_magnitude"]
+        min_rank_mag = self.thresholds["rank_trend_min_magnitude"]
 
         if rank_dir == "up" and rank_mag >= min_rank_mag:
             signals.append({
@@ -201,7 +213,7 @@ class SignalEngine:
 
         # ── PnL 暴涨/暴跌 ──
         # 24h PnL 绝对值检测（趋势检测作为辅助确认）
-        if pnl_24h >= SIGNAL_THRESHOLDS["pnl_surge_min_24h"]:
+        if pnl_24h >= self.thresholds["pnl_surge_min_24h"]:
             # pnl_7d 趋势确认：取反解决 _detect_trend 设计为 rank（越小越好）的符号问题
             pnl_dir, _, _ = self._detect_trend([-v for v in pnl_7d_values])
             if pnl_dir in ("up", "stable"):
@@ -213,7 +225,7 @@ class SignalEngine:
                     "score": pnl_24h * 2,
                 })
 
-        if pnl_24h <= SIGNAL_THRESHOLDS["pnl_dump_max_24h"]:
+        if pnl_24h <= self.thresholds["pnl_dump_max_24h"]:
             pnl_dir, _, _ = self._detect_trend([-v for v in pnl_7d_values])
             if pnl_dir in ("down", "stable"):
                 signals.append({
@@ -232,8 +244,8 @@ class SignalEngine:
         # volume_spike 不再作为独立信号
 
         # ── win_rate 趋势分析 ──
-        wr_surge_min = SIGNAL_THRESHOLDS.get("wr_surge_min", 8.0)
-        wr_dump_max = SIGNAL_THRESHOLDS.get("wr_dump_max", -8.0)
+        wr_surge_min = self.thresholds.get("wr_surge_min", 8.0)
+        wr_dump_max = self.thresholds.get("wr_dump_max", -8.0)
 
         wr_total_change: float = win_rate - prev_win_rate
         wr_trend_detail = f"{prev_win_rate}%→{win_rate}%"
@@ -282,7 +294,7 @@ class SignalEngine:
                 combined_up += 3
                 combined_up_reasons.append("Token 价格向好")
 
-        if combined_up >= SIGNAL_THRESHOLDS["combined_surge_score"]:
+        if combined_up >= self.thresholds["combined_surge_score"]:
             signals.append({
                 "type": "combined_surge",
                 "severity": "critical" if combined_up >= 40 else "high",
@@ -317,7 +329,7 @@ class SignalEngine:
                 combined_down += 3
                 combined_down_reasons.append("Token 价格走弱")
 
-        if combined_down >= SIGNAL_THRESHOLDS["combined_dump_score"]:
+        if combined_down >= self.thresholds["combined_dump_score"]:
             signals.append({
                 "type": "combined_dump",
                 "severity": "critical" if combined_down >= 40 else "high",

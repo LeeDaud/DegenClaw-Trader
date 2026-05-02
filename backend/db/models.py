@@ -443,6 +443,23 @@ class Alert:
 
 
 @dataclass(slots=True)
+class SignalOutcome:
+    alert_id: str
+    agent_id: str
+    signal_type: str
+    direction: str
+    score: float
+    params_snapshot: str  # JSON
+    predicted_at: str
+    evaluated_at: str | None = None
+    outcome: int | None = None
+    outcome_detail: str | None = None
+
+    def as_record(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
 class SystemEvent:
     event_id: str
     module: str

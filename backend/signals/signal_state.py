@@ -174,6 +174,17 @@ class SignalStateManager:
             return raw_score
         return state.ema_score
 
+    def update_config(self, key: str, value: Any) -> None:
+        """运行时更新配置（用于自动调参）"""
+        if key in self._config:
+            old = self._config[key]
+            self._config[key] = value
+            logger.info("配置更新: %s = %s (was %s)", key, value, old)
+
+    def get_config(self, key: str, default: Any = None) -> Any:
+        """读取运行时配置"""
+        return self._config.get(key, default)
+
     def reset(self, entity_id: str) -> None:
         """重置实体状态（用于测试或异常恢复）"""
         self._states.pop(entity_id, None)

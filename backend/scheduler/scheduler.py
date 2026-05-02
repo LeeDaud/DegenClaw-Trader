@@ -15,6 +15,7 @@ from collectors.season_manager import SeasonManager
 from notifiers.feishu_notifier import FeishuNotifier
 from parsers.degenclaw_parser import DegenClawParser
 from scoring.engine import DegenClawScoreEngine
+from calibration.outcome_tracker import OutcomeTracker
 from signals.signal_engine import SignalEngine
 from signals.signal_state import SignalStateManager
 from decision.event_window import EventWindowManager
@@ -275,7 +276,20 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
         ))
 
         # 4. 运行信号检测
-        signal_engine = SignalEngine(database, state_manager)
+        outcome_tracker = OutcomeTracker(database, state_manager)
+        try:
+            db_config = {}
+            raw_config = database.get_all_config()
+            for k, v in raw_config.items():
+                try:
+                    db_config[k] = float(v) if "." in v else int(v)
+                except (ValueError, TypeError):
+                    db_config[k] = v
+        except Exception:
+            db_config = {}
+            logger.warning("加载信号配置失败，使用默认值", exc_info=True)
+
+        signal_engine = SignalEngine(database, state_manager, thresholds=db_config, outcome_tracker=outcome_tracker)
         new_alerts = signal_engine.run_check()
         if new_alerts:
             logger.info("信号检测完成: 生成 %d 条预警", len(new_alerts))
@@ -614,13 +628,37 @@ class PollingController:
             self.scheduler.add_job(
                 self.scheduled_signal_gen,
                 "interval",
-                seconds=900,  # 15 分钟
+                seconds=900,
                 kwargs={},
                 id="degenclaw-signal",
                 replace_existing=True,
                 max_instances=1,
                 coalesce=True,
                 next_run_time=first_run + timedelta(seconds=900),
+            )
+            # 结果回检（每 15 分钟）
+            self.scheduler.add_job(
+                self.scheduled_outcome_check,
+                "interval",
+                seconds=900,
+                kwargs={},
+                id="degenclaw-outcome-check",
+                replace_existing=True,
+                max_instances=1,
+                coalesce=True,
+                next_run_time=first_run + timedelta(seconds=600),
+            )
+            # 自动调参（每天凌晨 3:00）
+            self.scheduler.add_job(
+                self.scheduled_auto_tune,
+                "cron",
+                hour=3,
+                minute=0,
+                kwargs={},
+                id="degenclaw-auto-tune",
+                replace_existing=True,
+                max_instances=1,
+                coalesce=True,
             )
         else:
             self.scheduler = None
@@ -678,6 +716,32 @@ class PollingController:
                 self.last_signal_error = str(exc)
                 logger.exception("signal gen failed trigger=%s", trigger)
                 raise
+
+    async def scheduled_outcome_check(self) -> None:
+        if self.mode != "auto":
+            return
+        try:
+            db = Database(self.settings.db_path)
+            state_mgr = SignalStateManager()
+            tracker = OutcomeTracker(db, state_mgr)
+            stats = tracker.check_outcomes()
+            logger.info("Outcome check: checked=%d correct=%d wrong=%d skipped=%d",
+                        stats["checked"], stats["correct"], stats["wrong"], stats["skipped"])
+        except Exception as exc:
+            logger.warning("Outcome check failed: %s", exc)
+
+    async def scheduled_auto_tune(self) -> None:
+        if self.mode != "auto":
+            return
+        try:
+            db = Database(self.settings.db_path)
+            state_mgr = SignalStateManager()
+            tracker = OutcomeTracker(db, state_mgr)
+            result = tracker.auto_tune()
+            if result["adjusted_keys"]:
+                logger.info("Auto tune: adjusted %s", result["adjusted_keys"])
+        except Exception as exc:
+            logger.warning("Auto tune failed: %s", exc)
 
     def get_status(self) -> dict:
         return {
