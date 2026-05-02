@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchDashboard, fetchAgents } from '../api/client'
-import { Activity, Users, TrendingUp, AlertTriangle, RefreshCw } from 'lucide-react'
+import { fetchDashboard, fetchAgents, fetchCalibrationStatus } from '../api/client'
+import { Activity, Users, TrendingUp, AlertTriangle, RefreshCw, BarChart3, Clock } from 'lucide-react'
 
 export default function Dashboard() {
   const { data: dashboard, isLoading, refetch } = useQuery({
@@ -13,6 +13,12 @@ export default function Dashboard() {
     queryKey: ['agents'],
     queryFn: () => fetchAgents(10),
     refetchInterval: 60_000,
+  })
+
+  const { data: calStatus } = useQuery({
+    queryKey: ['calibration-status'],
+    queryFn: fetchCalibrationStatus,
+    refetchInterval: 120_000,
   })
 
   if (isLoading) {
@@ -138,6 +144,49 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Self-Calibration Status */}
+          <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+            <h2 className="text-sm font-semibold mb-2 text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+              <BarChart3 size={14} />
+              Self-Calibration
+            </h2>
+            {!calStatus ? (
+              <div className="text-xs text-gray-500">Loading...</div>
+            ) : (
+              <div className="space-y-2">
+                <CalibrationRow
+                  label="A: Outcome Tracking"
+                  badge={calStatus.approach_a.stats
+                    ? `${calStatus.approach_a.stats.correct}/${calStatus.approach_a.stats.checked} ok`
+                    : calStatus.approach_a.pending_evaluations ? `${calStatus.approach_a.pending_evaluations} pending` : 'active'}
+                  lastRun={calStatus.approach_a.last_check_at}
+                  status={calStatus.approach_a.status}
+                  hitRate={calStatus.approach_a.hit_rates?.surge}
+                />
+                <CalibrationRow
+                  label="B: Adaptive Thresholds"
+                  badge="active"
+                  status={calStatus.approach_b.status}
+                />
+                <CalibrationRow
+                  label="C: Dynamic Window"
+                  badge="active"
+                  status={calStatus.approach_c.status}
+                />
+                <CalibrationRow
+                  label="D: Full Calibration"
+                  badge={calStatus.approach_d.f1_new != null
+                    ? `F1 ${calStatus.approach_d.f1_new.toFixed(3)}`
+                    : 'pending'}
+                  lastRun={calStatus.approach_d.last_run_at}
+                  status={calStatus.approach_d.status}
+                  f1Old={calStatus.approach_d.f1_old}
+                  f1New={calStatus.approach_d.f1_new}
+                />
+              </div>
+            )}
+          </div>
+
           {/* Recent Events */}
           <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
             <h2 className="text-sm font-semibold mb-2 text-gray-400 uppercase tracking-wider">Recent Events</h2>
@@ -156,6 +205,55 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function CalibrationRow({
+  label,
+  badge,
+  lastRun,
+  status,
+  hitRate,
+  f1Old,
+  f1New,
+}: {
+  label: string
+  badge?: string
+  lastRun?: string | null
+  status?: string
+  hitRate?: number | null
+  f1Old?: number | null
+  f1New?: number | null
+}) {
+  return (
+    <div className="text-xs border-b border-gray-800/50 last:border-0 pb-1.5 last:pb-0">
+      <div className="flex items-center justify-between">
+        <span className="text-gray-300">{label}</span>
+        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+          status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'
+        }`}>
+          {badge || status || 'active'}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 mt-0.5 text-gray-500">
+        {lastRun && (
+          <span className="flex items-center gap-1">
+            <Clock size={10} />
+            {new Date(lastRun).toLocaleTimeString()}
+          </span>
+        )}
+        {hitRate != null && (
+          <span className="text-gray-400">
+            Surge: {hitRate}%
+          </span>
+        )}
+        {f1Old != null && f1New != null && (
+          <span className={f1New >= f1Old ? 'text-emerald-400' : 'text-red-400'}>
+            F1: {f1Old.toFixed(3)} → {f1New.toFixed(3)}
+          </span>
+        )}
       </div>
     </div>
   )

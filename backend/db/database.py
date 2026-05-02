@@ -1179,6 +1179,13 @@ class Database:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def count_pending_outcomes(self) -> int:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) AS cnt FROM signal_outcomes WHERE evaluated_at IS NULL",
+            ).fetchone()
+        return row["cnt"] if row else 0
+
     def update_outcome(self, outcome_id: int, outcome: int, detail: str, evaluated_at: str) -> None:
         with self._connect() as conn:
             conn.execute(

@@ -612,6 +612,14 @@ class PollingController:
         self.last_signal_error: str | None = None
         self.last_signal_started_at: str | None = None
         self.last_signal_completed_at: str | None = None
+        # 校准任务状态追踪
+        self.last_outcome_check_at: str | None = None
+        self.last_outcome_check_stats: dict | None = None
+        self.last_auto_tune_at: str | None = None
+        self.last_auto_tune_adjustments: list[str] | None = None
+        self.last_full_calibration_at: str | None = None
+        self.last_full_calibration_f1_old: float | None = None
+        self.last_full_calibration_f1_new: float | None = None
         self.mode = "auto"
 
         if AsyncIOScheduler is not None:
@@ -742,6 +750,8 @@ class PollingController:
             state_mgr = SignalStateManager()
             tracker = OutcomeTracker(db, state_mgr)
             stats = tracker.check_outcomes()
+            self.last_outcome_check_at = utc_now_iso()
+            self.last_outcome_check_stats = stats
             logger.info("Outcome check: checked=%d correct=%d wrong=%d skipped=%d",
                         stats["checked"], stats["correct"], stats["wrong"], stats["skipped"])
         except Exception as exc:
@@ -755,6 +765,8 @@ class PollingController:
             state_mgr = SignalStateManager()
             tracker = OutcomeTracker(db, state_mgr)
             result = tracker.auto_tune()
+            self.last_auto_tune_at = utc_now_iso()
+            self.last_auto_tune_adjustments = result.get("adjusted_keys")
             if result["adjusted_keys"]:
                 logger.info("Auto tune: adjusted %s", result["adjusted_keys"])
         except Exception as exc:
@@ -768,7 +780,10 @@ class PollingController:
             from calibration.auto_calibrator import AutoCalibrator
             calibrator = AutoCalibrator(db)
             result = calibrator.quick_calibrate()
+            self.last_full_calibration_at = utc_now_iso()
             if result.get("success"):
+                self.last_full_calibration_f1_old = result.get("old_f1")
+                self.last_full_calibration_f1_new = result.get("new_f1")
                 logger.info("Calibration: F1 %.3f → %.3f",
                             result.get("old_f1", 0), result.get("new_f1", 0))
             else:
@@ -793,5 +808,20 @@ class PollingController:
                 "last_completed_at": self.last_signal_completed_at,
                 "last_error": self.last_signal_error,
                 "last_summary": self.last_signal_summary,
+            },
+            "calibration": {
+                "outcome_check": {
+                    "last_run_at": self.last_outcome_check_at,
+                    "stats": self.last_outcome_check_stats,
+                },
+                "auto_tune": {
+                    "last_run_at": self.last_auto_tune_at,
+                    "last_adjustments": self.last_auto_tune_adjustments,
+                },
+                "full_calibration": {
+                    "last_run_at": self.last_full_calibration_at,
+                    "f1_old": self.last_full_calibration_f1_old,
+                    "f1_new": self.last_full_calibration_f1_new,
+                },
             },
         }

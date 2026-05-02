@@ -227,6 +227,33 @@ export interface PaperPerformance {
   open_positions: PaperPositionData[]
 }
 
+// --- Calibration Status ---
+
+export interface CalibrationApproachStatus {
+  name: string
+  enabled: boolean
+  status: string
+  last_check_at?: string | null
+  last_run_at?: string | null
+  stats?: { checked: number; correct: number; wrong: number; skipped: number } | null
+  hit_rates?: Record<string, number> | null
+  pending_evaluations?: number | null
+  f1_old?: number | null
+  f1_new?: number | null
+  description?: string | null
+}
+
+export interface CalibrationStatus {
+  approach_a: CalibrationApproachStatus
+  approach_b: CalibrationApproachStatus
+  approach_c: CalibrationApproachStatus
+  approach_d: CalibrationApproachStatus
+  auto_tune: {
+    last_run_at: string | null
+    last_adjustments: string[] | null
+  }
+}
+
 export async function fetchSignals(limit = 50, status?: string) {
   const params = new URLSearchParams({ limit: String(limit) })
   if (status) params.set('status', status)
@@ -241,6 +268,10 @@ export async function fetchPositions(limit = 50, status?: string) {
 
 export async function fetchPerformance() {
   return apiGet<PaperPerformance>('/performance/paper')
+}
+
+export async function fetchCalibrationStatus() {
+  return apiGet<CalibrationStatus>('/calibration/status')
 }
 
 // --- AI Pot ---

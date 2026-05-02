@@ -1,0 +1,11 @@
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_scan" to job store "default"
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_signal_gen" to job store "default"
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_outcome_check" to job store "default"
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_auto_tune" to job store "default"
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Added job "PollingController.scheduled_full_calibration" to job store "default"
+2026-05-02 15:00:28 | INFO    | apscheduler.schedulers.base | Scheduler started

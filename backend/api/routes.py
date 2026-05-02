@@ -454,3 +454,62 @@ async def trigger_signal_generation(request: Request) -> dict[str, Any]:
     controller = get_controller(request)
     result = await controller.signal_gen_once(trigger="manual")
     return _api_ok(result)
+
+
+# --- Calibration Status ---
+
+
+@router.get("/calibration/status")
+async def get_calibration_status(request: Request) -> dict[str, Any]:
+    """返回四个自校准方案的运行状态"""
+    database = get_database(request)
+    controller = get_controller(request)
+    status = controller.get_status()
+    cal = status.get("calibration", {})
+
+    # 方案 A：从数据库获取命中率 + 待评估数
+    since_24h = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat().replace("+00:00", "Z")
+    signal_types = ["surge", "dump", "rank_surge", "rank_dump",
+                    "combined_surge", "combined_dump", "wr_surge", "wr_dump"]
+    hit_rates = {}
+    for st in signal_types:
+        hr = database.get_hit_rate(st, since_24h)
+        if hr is not None:
+            hit_rates[st] = round(hr * 100, 1)
+    pending_count = database.count_pending_outcomes()
+
+    return _api_ok({
+        "approach_a": {
+            "name": "Outcome Tracking",
+            "enabled": True,
+            "status": "active",
+            "last_check_at": cal.get("outcome_check", {}).get("last_run_at"),
+            "stats": cal.get("outcome_check", {}).get("stats"),
+            "hit_rates": hit_rates,
+            "pending_evaluations": pending_count,
+        },
+        "approach_b": {
+            "name": "Agent Adaptive Thresholds",
+            "enabled": True,
+            "status": "active",
+            "description": "按 Agent 历史波动动态缩放信号阈值",
+        },
+        "approach_c": {
+            "name": "Dynamic SNR Window",
+            "enabled": True,
+            "status": "active",
+            "description": "按信噪比动态调整趋势检测窗口",
+        },
+        "approach_d": {
+            "name": "Full Calibration",
+            "enabled": True,
+            "status": "active",
+            "last_run_at": cal.get("full_calibration", {}).get("last_run_at"),
+            "f1_old": cal.get("full_calibration", {}).get("f1_old"),
+            "f1_new": cal.get("full_calibration", {}).get("f1_new"),
+        },
+        "auto_tune": {
+            "last_run_at": cal.get("auto_tune", {}).get("last_run_at"),
+            "last_adjustments": cal.get("auto_tune", {}).get("last_adjustments"),
+        },
+    })
