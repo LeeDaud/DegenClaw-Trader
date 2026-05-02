@@ -272,6 +272,21 @@ CREATE TABLE IF NOT EXISTS signal_config (
     config_value TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS signal_calibration_params (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    calibrated_at TEXT NOT NULL,
+    params TEXT NOT NULL,
+    f1_score REAL NOT NULL DEFAULT 0,
+    precision REAL NOT NULL DEFAULT 0,
+    recall REAL NOT NULL DEFAULT 0,
+    total_signals INTEGER NOT NULL DEFAULT 0,
+    baseline_f1 REAL NOT NULL DEFAULT 0,
+    baseline_precision REAL NOT NULL DEFAULT 0,
+    baseline_recall REAL NOT NULL DEFAULT 0,
+    baseline_signals INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 0
+);
 """
 
 INDEXES_SQL = """
@@ -1208,3 +1223,48 @@ class Database:
         with self._connect() as conn:
             rows = conn.execute("SELECT config_key, config_value FROM signal_config").fetchall()
         return {r["config_key"]: r["config_value"] for r in rows}
+
+    # --- Calibration Records ---
+
+    def insert_calibration_record(self, record: dict) -> None:
+        now = utc_now_iso()
+        with self._connect() as conn:
+            conn.execute(
+                """INSERT INTO signal_calibration_params
+                   (calibrated_at, params, f1_score, precision, recall,
+                    total_signals, baseline_f1, baseline_precision,
+                    baseline_recall, baseline_signals, active)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (record["calibrated_at"], record["params"], record["f1_score"],
+                 record["precision"], record["recall"], record["total_signals"],
+                 record["baseline_f1"], record["baseline_precision"],
+                 record["baseline_recall"], record["baseline_signals"],
+                 record.get("active", 0)),
+            )
+            conn.commit()
+
+    def deactivate_old_calibrations(self, keep_latest: int = 20) -> None:
+        with self._connect() as conn:
+            conn.execute("UPDATE signal_calibration_params SET active = 0 WHERE active = 1")
+            conn.execute(
+                """DELETE FROM signal_calibration_params WHERE id NOT IN (
+                       SELECT id FROM signal_calibration_params ORDER BY id DESC LIMIT ?
+                   )""",
+                (keep_latest,),
+            )
+            conn.commit()
+
+    def get_active_calibration(self) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM signal_calibration_params WHERE active = 1 ORDER BY id DESC LIMIT 1",
+            ).fetchone()
+        return dict(row) if row else None
+
+    def get_calibration_history(self, limit: int = 10) -> list[dict]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM signal_calibration_params ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]

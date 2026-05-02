@@ -665,6 +665,18 @@ class PollingController:
                 max_instances=1,
                 coalesce=True,
             )
+            # 全校准回测（每天凌晨 2:00，先于 auto_tune）
+            self.scheduler.add_job(
+                self.scheduled_full_calibration,
+                "cron",
+                hour=2,
+                minute=0,
+                kwargs={},
+                id="degenclaw-full-calibration",
+                replace_existing=True,
+                max_instances=1,
+                coalesce=True,
+            )
         else:
             self.scheduler = None
 
@@ -747,6 +759,22 @@ class PollingController:
                 logger.info("Auto tune: adjusted %s", result["adjusted_keys"])
         except Exception as exc:
             logger.warning("Auto tune failed: %s", exc)
+
+    async def scheduled_full_calibration(self) -> None:
+        if self.mode != "auto":
+            return
+        try:
+            db = Database(self.settings.db_path)
+            from calibration.auto_calibrator import AutoCalibrator
+            calibrator = AutoCalibrator(db)
+            result = calibrator.quick_calibrate()
+            if result.get("success"):
+                logger.info("Calibration: F1 %.3f → %.3f",
+                            result.get("old_f1", 0), result.get("new_f1", 0))
+            else:
+                logger.info("Calibration skipped: %s", result.get("reason", "unknown"))
+        except Exception as exc:
+            logger.warning("Calibration failed: %s", exc)
 
     def get_status(self) -> dict:
         return {
