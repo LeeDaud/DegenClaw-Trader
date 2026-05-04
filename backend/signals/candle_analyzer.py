@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import time
 from typing import Any
 
@@ -23,9 +24,11 @@ REVERSAL_LEVELS = (1, 3, 5)
 # 每级别冷却（秒）
 LEVEL_COOLDOWN_SECONDS = 900  # 15 分钟
 
-# 反转必须回撤至少此比例的趋势涨幅/跌幅（防单边行情中的小反转误报）
-# 0.3 = 反转需回撤 ≥ 趋势幅度的 30%
-MIN_RETRACEMENT_RATIO = 0.3
+# 反转回撤比例底限（宽松）：反转幅度需达到趋势幅度的 15%，否则转由噪声底限判断
+MIN_RETRACEMENT_RATIO = 0.15
+
+# 噪声底限置信度：1σ ≈ 68%，宁可误报不错过
+NOISE_FLOOR_Z = 1.0
 
 # 趋势强度分级
 TREND_STRENGTH_BANDS = [
@@ -59,6 +62,41 @@ def _calc_severity(reversal_count: int, trend_length: int) -> str:
     if strength >= 2.0:
         return _escalate(base, 1)
     return base
+
+
+def _calc_noise_floor(prices: list[float], z: float = NOISE_FLOOR_Z) -> float:
+    """计算价格序列的动态噪声底限 = Z × 相邻变动百分比的标准差
+
+    反映该 token 自身的近期波动水平：
+      - 低波动 token → 底限低，对小反转敏感
+      - 高波动 token → 底限高，屏蔽随机摇摆
+
+    Args:
+        prices: 有效价格列表（已过滤 flat），[最新, ..., 最旧]
+        z: Z 值，默认 2.0 ≈ 95% 置信度
+
+    Returns:
+        噪声底限（百分比），至少 0.2%
+    """
+    if len(prices) < 4:
+        return 0.5  # 样本不足，保守回退
+
+    changes = []
+    for i in range(len(prices) - 1):
+        older = prices[i + 1]
+        newer = prices[i]
+        if older > 0 and newer > 0:
+            pct = abs((newer - older) / older * 100)
+            changes.append(pct)
+
+    if len(changes) < 3:
+        return 0.5
+
+    n = len(changes)
+    mean = sum(changes) / n
+    variance = sum((c - mean) ** 2 for c in changes) / n
+    std = math.sqrt(variance) if variance > 0 else 0.2
+    return round(max(std * z, 0.2), 4)
 
 
 class CandleAnalyzer:
@@ -216,11 +254,15 @@ class CandleAnalyzer:
         price_change_trend_pct = (t_recent - t_oldest) / t_oldest * 100
         price_change_reversal_pct = (r_recent - r_oldest) / r_oldest * 100
 
-        # 8. 单边行情过滤：反转幅度需达到趋势幅度的 MIN_RETRACEMENT_RATIO
+        # 8. 双阈值过滤：宽松比例（15%）+ 动态噪声底限（2σ），任一即放行
         trend_magnitude = abs(price_change_trend_pct)
         reversal_magnitude = abs(price_change_reversal_pct)
-        if trend_magnitude > 0 and reversal_magnitude < trend_magnitude * MIN_RETRACEMENT_RATIO:
-            return None  # 小反转，不影响单边趋势
+        if trend_magnitude > 0:
+            noise_floor = _calc_noise_floor(valid_prices)
+            below_ratio = reversal_magnitude < trend_magnitude * MIN_RETRACEMENT_RATIO
+            below_noise = reversal_magnitude < noise_floor
+            if below_ratio and below_noise:
+                return None  # 两种阈值都没过 → 视为随机噪声
 
         # 6. 反转段成交量（取最大值）
         reversal_volumes = valid_volumes[:reversal_count]
