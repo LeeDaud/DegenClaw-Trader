@@ -2080,3 +2080,782 @@ Traceback (most recent call last):
 
 httpx.ConnectError
 2026-05-04 15:39:48 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 07:43:27 UTC)" executed successfully
+2026-05-04 15:43:27 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 07:48:27 UTC)" (scheduled at 2026-05-04 07:43:27.410555+00:00)
+2026-05-04 15:43:27 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-05-04 07:58:27 UTC)" (scheduled at 2026-05-04 07:43:27.410555+00:00)
+2026-05-04 15:43:28 | INFO    | scheduler.scheduler | signal generation: 0 signals, 0 buys, 0 sells
+2026-05-04 15:43:28 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-05-04 07:58:27 UTC)" executed successfully
+2026-05-04 15:43:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-05-04 15:43:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-05-04 15:43:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-05-04 15:43:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-05-04 15:43:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-05-04 15:43:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-05-04 15:43:30 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-05-04 15:43:32 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-05-04 15:43:32 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-05-04 15:43:32 | INFO    | scheduler.scheduler | 赛季过滤: 移除 245 个非当季 Agent (剩 97)，排名已重分配
+2026-05-04 15:43:35 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3bDbb25C9A1660511feac2b217da9eB7577c383a "HTTP/1.1 200 OK"
+2026-05-04 15:43:46 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8F39a198E7728c4e3bDBDf1cab913cf79fC35375 "HTTP/1.1 200 OK"
+2026-05-04 15:43:52 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xBfF0c490A74F7C06d7D700814F49530a7E274ABe "HTTP/1.1 200 OK"
+2026-05-04 15:43:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x858ad099DeAD69FD64e055cbE7b6c224b7bF7793 "HTTP/1.1 200 OK"
+2026-05-04 15:43:55 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x91Ad55252a9F084e8dBf61c2f3cA3b2Cc7699980 "HTTP/1.1 200 OK"
+2026-05-04 15:43:56 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4D80fd4d63CAD43eF25DBd63f6bb0988B5E5E9d1 "HTTP/1.1 200 OK"
+2026-05-04 15:43:57 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xA3d46ebc52494c3A8bC4b3c1f6d1a7Bc806c959A "HTTP/1.1 200 OK"
+2026-05-04 15:43:58 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x847B1e59c16F4Fe0817106cEbEb999335121e678 "HTTP/1.1 200 OK"
+2026-05-04 15:44:00 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4dBb9F7a72C62A16D8F60a370Ea4193a2E3093B5 "HTTP/1.1 200 OK"
+2026-05-04 15:44:02 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa595426BeB0337Fdc5AaD9F5952147fF588B7684 "HTTP/1.1 200 OK"
+2026-05-04 15:44:04 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc43991D36AE2A0671dFF2483698F4B5d5cDC1508 "HTTP/1.1 200 OK"
+2026-05-04 15:44:06 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xB93F7acF24C4184fF783E827A5e9427eDC894d10 "HTTP/1.1 200 OK"
+2026-05-04 15:44:08 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x431d712AC82CB73c5B98BBEF0ed7cDFeF7D4aCfC "HTTP/1.1 200 OK"
+2026-05-04 15:44:09 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xF62711E12D3Bf4FF4CF7cD3dAD6E76Cd22272EeC "HTTP/1.1 200 OK"
+2026-05-04 15:44:10 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x70693d9d4Ca05d38256cFDfD8Ffc1B7816A670dC "HTTP/1.1 200 OK"
+2026-05-04 15:44:12 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc2BCeB0EE69455da32aBB10A5Ba81C0299a925C8 "HTTP/1.1 200 OK"
+2026-05-04 15:44:16 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x968Bb30aE87051860f413c57BCF085502634E787 "HTTP/1.1 200 OK"
+2026-05-04 15:44:21 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4E6eF3778D493550B5eef5ae6141bF9Bfc2B1bBC "HTTP/1.1 200 OK"
+2026-05-04 15:44:22 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x41FDE6Ce39D79706D7C6028D662059D00E10f99f "HTTP/1.1 200 OK"
+2026-05-04 15:44:23 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x7dcf2de08e918a65617eA07d94e95C84b234796A "HTTP/1.1 200 OK"
+2026-05-04 15:44:25 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xfc89605F3c09d70ff3Ad00BAB53A039D44C5a326 "HTTP/1.1 200 OK"
+2026-05-04 15:44:31 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x58940e9b00dA1309a5bF1B148CCd1eedF6BA026f "HTTP/1.1 200 OK"
+2026-05-04 15:44:33 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x915C135D2CbCAd68E5C30f1cEa0ee7129f57fD03 "HTTP/1.1 200 OK"
+2026-05-04 15:44:35 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x5f882caFdfA095Cb85D03DA388d162C80aECc5f4 "HTTP/1.1 200 OK"
+2026-05-04 15:44:37 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x39dBF1e2Bce3509b51876d526489D1Ec606b3A77 "HTTP/1.1 200 OK"
+2026-05-04 15:44:38 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xC44141a684f6AA4E36cD9264ab55550B03C88643 "HTTP/1.1 200 OK"
+2026-05-04 15:44:41 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3cF91d1885e1AE40aB8b34E18253418C717e023B "HTTP/1.1 200 OK"
+2026-05-04 15:44:42 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xb29B1D55Af9a2E478297a64a13b5AE31C502Dd46 "HTTP/1.1 200 OK"
+2026-05-04 15:44:43 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa9C44e4FfbBF18a237C15f2d63D82AB793747237 "HTTP/1.1 200 OK"
+2026-05-04 15:44:47 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4363B533aA4d2b7aF3c88ac0f82871bf3da1958f "HTTP/1.1 200 OK"
+2026-05-04 15:44:48 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1903160806e9eC3C77E31C6821Ff8592Dee9963c "HTTP/1.1 200 OK"
+2026-05-04 15:44:49 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1004D5F5f230234ccA32a28dc12B0F2CBC677C1D "HTTP/1.1 200 OK"
+2026-05-04 15:44:51 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xd1F39D77feDc4D12F0Ec327b2698f918F1bD3cDB "HTTP/1.1 200 OK"
+2026-05-04 15:44:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa9F0C14C5D3Fc94C8B6b3c095fEcE3AD41989D1A "HTTP/1.1 200 OK"
+2026-05-04 15:44:56 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xdFa3d9Bedd9594618877D973fD01578a280b962a "HTTP/1.1 200 OK"
+2026-05-04 15:44:58 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xcbBC817033Be0A83911B401624dE155550c27cC0 "HTTP/1.1 200 OK"
+2026-05-04 15:44:59 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x55F8076BBa812721Aa8e10D1f77Fe5CD0389CdD0 "HTTP/1.1 200 OK"
+2026-05-04 15:45:05 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xdbe92cac226eCFEDC04BF6F1826f5Abbc3acd890 "HTTP/1.1 200 OK"
+2026-05-04 15:45:06 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xb6d0bFC3d1368Da2c403A950B36904F55a115690 "HTTP/1.1 200 OK"
+2026-05-04 15:45:09 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xaCd85F0bE2Bf5b47ceA13bDcfA89E8D36FA2786D "HTTP/1.1 200 OK"
+2026-05-04 15:45:11 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xC841b4eaD3F70bE99472FFdB88E5c3C7aF6A481a "HTTP/1.1 200 OK"
+2026-05-04 15:45:12 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xcE545B32D33c071d4DaB9dc6B1C629ce46b1eA53 "HTTP/1.1 200 OK"
+2026-05-04 15:45:13 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa64F48a161D378091A22498c2D8FAa76874e4544 "HTTP/1.1 200 OK"
+2026-05-04 15:45:15 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8766CaD708b22bb4795c501c1E36e30f56444843 "HTTP/1.1 200 OK"
+2026-05-04 15:45:18 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x035c2c656965897C4E9Fc7b05C8F69AeB0b38925 "HTTP/1.1 200 OK"
+2026-05-04 15:45:19 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x9dCa499CaF25976744DB4c9C3d1703DF64fb33EB "HTTP/1.1 200 OK"
+2026-05-04 15:45:21 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xF487A8dD9b2009f6fF02E0100A16465EC9eBC7dd "HTTP/1.1 200 OK"
+2026-05-04 15:45:23 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x73bf711556F8bdF7E344B4705e2f7B3B8b38a3E8 "HTTP/1.1 200 OK"
+2026-05-04 15:45:25 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x10ac8FbfF5750B474D3D173d0349e51F6736eFD0 "HTTP/1.1 200 OK"
+2026-05-04 15:45:29 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8E2a6AF9139398bEdc1bB0aF57c8a4e37aF31F02 "HTTP/1.1 200 OK"
+2026-05-04 15:45:31 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4cfCB1113F0935BfF8b19F156B8Cb27B4674a1A8 "HTTP/1.1 200 OK"
+2026-05-04 15:45:33 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x09938Fe74Fb4a564465A521f08824F8Cd00db8db "HTTP/1.1 200 OK"
+2026-05-04 15:45:37 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc7AF1C5D0A6723A36BEa44FD910Cd090Ed77F332 "HTTP/1.1 200 OK"
+2026-05-04 15:45:40 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x15Ec9112637f3fE3aeA458D7e1e97d700b13E9Db "HTTP/1.1 200 OK"
+2026-05-04 15:45:41 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xbfa733702305280F066D470afDFA784fA70e2649 "HTTP/1.1 200 OK"
+2026-05-04 15:45:43 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x6CBeE386E6E50A5878375169868F01666810b62B "HTTP/1.1 200 OK"
+2026-05-04 15:45:48 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x576CE00950f49b0bA696Ed105087B6e686641900 "HTTP/1.1 200 OK"
+2026-05-04 15:45:49 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x16BccAe9A9Fe19D765517438641f6fC1A4AC47C2 "HTTP/1.1 200 OK"
+2026-05-04 15:45:50 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x2b9825a4A0f8457a44D66d6776083230c22C5262 "HTTP/1.1 200 OK"
+2026-05-04 15:45:52 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x82f98aA2cd92e4066f8c531Ab4b3d4C35f58e345 "HTTP/1.1 200 OK"
+2026-05-04 15:45:53 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x89C202e98F41CDEB7b397E35a0882315D2fFC8De "HTTP/1.1 200 OK"
+2026-05-04 15:45:55 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x5750d0655c90E8279B0B1a9D8312085bA6DfB7D6 "HTTP/1.1 200 OK"
+2026-05-04 15:46:00 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xCD9286753033CfDe5A5C4f7470443951Cd6cdF42 "HTTP/1.1 200 OK"
+2026-05-04 15:46:02 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xD1a9aB741e5b95f040Bd8F134865A93F3bf04Dc7 "HTTP/1.1 200 OK"
+2026-05-04 15:46:05 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x925a3fAC4a143aeEaF53D1eC3A83FA4Cf7453556 "HTTP/1.1 200 OK"
+2026-05-04 15:46:08 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x62734ff6B7275ED265C1518069Fd5a4d38a7B56c "HTTP/1.1 200 OK"
+2026-05-04 15:46:11 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3781934F9CC3B5157EAb5F663B144103409CFfFB "HTTP/1.1 200 OK"
+2026-05-04 15:46:15 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x11E18A052101dAe01aBe8E9Dc1BAaDa1bC592989 "HTTP/1.1 200 OK"
+2026-05-04 15:46:17 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1f6b668cce6F2E10CDb9d271Df71595151c20BB0 "HTTP/1.1 200 OK"
+2026-05-04 15:46:19 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x2c863B77ee12CB33Db605ED32D7c6937d4Be30A9 "HTTP/1.1 200 OK"
+2026-05-04 15:46:23 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa2d4Aec94BA0896d95ccC5451C9525b9ec0314De "HTTP/1.1 200 OK"
+2026-05-04 15:46:26 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x320A1b0E79E1B220911C661448CB1a626e868F92 "HTTP/1.1 200 OK"
+2026-05-04 15:46:29 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xbBEe89414103D1f60B5FDfdC065Ff375aF16FcB9 "HTTP/1.1 200 OK"
+2026-05-04 15:46:31 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1D05246a51301B5ce364021F9288146cDb0C9Ea0 "HTTP/1.1 200 OK"
+2026-05-04 15:46:34 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa4541B3bE701989d0a33cFA3a5ec1a39A151a6b7 "HTTP/1.1 200 OK"
+2026-05-04 15:46:36 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc04d3C06E2faa7a7F1B8063B84BA45ad81d30c9c "HTTP/1.1 200 OK"
+2026-05-04 15:46:39 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x9F35d168DC2207794B6324BC7a71a439Cce84063 "HTTP/1.1 200 OK"
+2026-05-04 15:46:40 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xFbbb659b1B3590A8C2b6C1FAa01d365542700d3F "HTTP/1.1 200 OK"
+2026-05-04 15:46:42 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x37E9fFFE86E13D0DE7F40Ea7867F735C65851d9f "HTTP/1.1 200 OK"
+2026-05-04 15:46:45 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8E513f3F06411e1EcFd8c05815a059ec58A3267d "HTTP/1.1 200 OK"
+2026-05-04 15:46:47 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1C275aeC4Ce398bd34437Cb6f107305992d50199 "HTTP/1.1 200 OK"
+2026-05-04 15:46:49 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x41bb71385AD8712464B01C5E5d8A1A8F4925A63c "HTTP/1.1 200 OK"
+2026-05-04 15:46:50 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x0Ea9E0fEe3AdC0A781dcaFf08B548438A6346e56 "HTTP/1.1 200 OK"
+2026-05-04 15:46:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xD7bBceA73EFF7bA3b632f7600a2D6Ea2094c84e9 "HTTP/1.1 200 OK"
+2026-05-04 15:46:56 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x719b944ea5A611611D167DB0B7Dae4624c09Fd43 "HTTP/1.1 200 OK"
+2026-05-04 15:46:58 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x593dC48a279B20c940E463c9ECb22Ed7B46bBf53 "HTTP/1.1 200 OK"
+2026-05-04 15:47:00 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x242057acD91bB1E6f567252762B5A9530D65D00b "HTTP/1.1 200 OK"
+2026-05-04 15:47:04 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x5Dafd1f74De4a529f712796FB7a6d0c12Eb6Ed50 "HTTP/1.1 200 OK"
+2026-05-04 15:47:06 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xdad9CC48E765330Cf3943f9a50De14D3519fb443 "HTTP/1.1 200 OK"
+2026-05-04 15:47:09 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xfC338BB6E31d2190501dC567CdAa7AB5A72544fD "HTTP/1.1 200 OK"
+2026-05-04 15:47:10 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x23ED30E4477245523707dd8ef2a4164000111d1C "HTTP/1.1 200 OK"
+2026-05-04 15:47:12 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x154972b37f39601Dc254982997cbB0b61D1cdCC3 "HTTP/1.1 200 OK"
+2026-05-04 15:47:18 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xFDC90D47aCaa7f681E5F63726D4E8a927cD68d13 "HTTP/1.1 200 OK"
+2026-05-04 15:47:20 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x9Bf886AC270c5ed9b5B63213f545c3c3ADBF22fE "HTTP/1.1 200 OK"
+2026-05-04 15:47:21 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x35C1E20FF22Aa8A0aFBA628d6dF3513602bBD4F8 "HTTP/1.1 200 OK"
+2026-05-04 15:47:24 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xb7A63Bf7751147452cB6A8383Be95681831932c7 "HTTP/1.1 200 OK"
+2026-05-04 15:47:27 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x36d094194fafBf57890f938Bf91d86598Ee265eE "HTTP/1.1 200 OK"
+2026-05-04 15:47:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/pot-agents "HTTP/1.1 200 "
+2026-05-04 15:47:38 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:38 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:38 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:38 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:38 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:38 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:39 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:39 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:39 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:39 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:40 | INFO    | httpx._client | HTTP Request: POST https://api.hyperliquid.xyz/info "HTTP/1.1 200 OK"
+2026-05-04 15:47:41 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/council?seasonId=53 "HTTP/1.1 404 "
+2026-05-04 15:47:41 | WARNING | collectors.degenclaw_collector | fetch council (seasonId=53) failed: Client error '404 ' for url 'https://degen.virtuals.io/api/council?seasonId=53'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-05-04 15:47:44 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/council/seasons "HTTP/1.1 200 "
+2026-05-04 15:47:46 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/council?seasonId=52 "HTTP/1.1 200 "
+2026-05-04 15:47:49 | INFO    | scoring.engine | 评分完成: 97 个 Agent
+2026-05-04 15:47:49 | INFO    | scheduler.scheduler | 评分完成: 97 个 Agent
+2026-05-04 15:47:49 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 07:48:27 UTC)" executed successfully
+2026-05-04 15:48:27 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 07:53:27 UTC)" (scheduled at 2026-05-04 07:48:27.410555+00:00)
+2026-05-04 15:48:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-05-04 15:48:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-05-04 15:48:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-05-04 15:48:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-05-04 15:48:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-05-04 15:48:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-05-04 15:48:30 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-05-04 15:48:35 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-05-04 15:48:35 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-05-04 15:48:35 | INFO    | scheduler.scheduler | 赛季过滤: 移除 245 个非当季 Agent (剩 97)，排名已重分配
+2026-05-04 15:48:37 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3bDbb25C9A1660511feac2b217da9eB7577c383a "HTTP/1.1 200 OK"
+2026-05-04 15:48:39 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8F39a198E7728c4e3bDBDf1cab913cf79fC35375 "HTTP/1.1 200 OK"
+2026-05-04 15:48:42 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xBfF0c490A74F7C06d7D700814F49530a7E274ABe "HTTP/1.1 200 OK"
+2026-05-04 15:48:45 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x858ad099DeAD69FD64e055cbE7b6c224b7bF7793 "HTTP/1.1 200 OK"
+2026-05-04 15:48:47 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x91Ad55252a9F084e8dBf61c2f3cA3b2Cc7699980 "HTTP/1.1 200 OK"
+2026-05-04 15:48:49 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4D80fd4d63CAD43eF25DBd63f6bb0988B5E5E9d1 "HTTP/1.1 200 OK"
+2026-05-04 15:48:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xA3d46ebc52494c3A8bC4b3c1f6d1a7Bc806c959A "HTTP/1.1 200 OK"
+2026-05-04 15:48:56 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x847B1e59c16F4Fe0817106cEbEb999335121e678 "HTTP/1.1 200 OK"
+2026-05-04 15:48:58 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4dBb9F7a72C62A16D8F60a370Ea4193a2E3093B5 "HTTP/1.1 200 OK"
+2026-05-04 15:48:59 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa595426BeB0337Fdc5AaD9F5952147fF588B7684 "HTTP/1.1 200 OK"
+2026-05-04 15:49:02 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc43991D36AE2A0671dFF2483698F4B5d5cDC1508 "HTTP/1.1 200 OK"
+2026-05-04 15:49:03 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xB93F7acF24C4184fF783E827A5e9427eDC894d10 "HTTP/1.1 200 OK"
+2026-05-04 15:49:07 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x431d712AC82CB73c5B98BBEF0ed7cDFeF7D4aCfC "HTTP/1.1 200 OK"
+2026-05-04 15:49:11 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xF62711E12D3Bf4FF4CF7cD3dAD6E76Cd22272EeC "HTTP/1.1 200 OK"
+2026-05-04 15:49:12 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x70693d9d4Ca05d38256cFDfD8Ffc1B7816A670dC "HTTP/1.1 200 OK"
+2026-05-04 15:49:14 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc2BCeB0EE69455da32aBB10A5Ba81C0299a925C8 "HTTP/1.1 200 OK"
+2026-05-04 15:49:16 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x968Bb30aE87051860f413c57BCF085502634E787 "HTTP/1.1 200 OK"
+2026-05-04 15:49:17 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4E6eF3778D493550B5eef5ae6141bF9Bfc2B1bBC "HTTP/1.1 200 OK"
+2026-05-04 15:49:20 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x41FDE6Ce39D79706D7C6028D662059D00E10f99f "HTTP/1.1 200 OK"
+2026-05-04 15:49:37 | ERROR   | logging | collection failed
+Traceback (most recent call last):
+
+  File "C:\Python313\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Python313\Lib\site-packages\httpx\_transports\default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+                 │    │     │                    └ <Request [b'GET']>
+                 │    │     └ <function AsyncConnectionPool.handle_async_request at 0x0000013260E6F880>
+                 │    └ <AsyncHTTPProxy [Requests: 0 active, 0 queued | Connections: 0 active, 0 idle]>
+                 └ <httpx.AsyncHTTPTransport object at 0x00000132620D7B10>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 256, in handle_async_request
+    raise exc from None
+  File "C:\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 236, in handle_async_request
+    response = await connection.handle_async_request(
+                     │          └ <function AsyncTunnelHTTPConnection.handle_async_request at 0x0000013260E8CA40>
+                     └ <AsyncTunnelHTTPConnection ['https://api.dexscreener.com:443', HTTP/1.1, CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http_proxy.py", line 343, in handle_async_request
+    return await self._connection.handle_async_request(request)
+                 │    │           │                    └ <Request [b'GET']>
+                 │    │           └ <function AsyncHTTP11Connection.handle_async_request at 0x0000013260E6D8A0>
+                 │    └ <AsyncHTTP11Connection ['https://api.dexscreener.com:443', CLOSED, Request Count: 1]>
+                 └ <AsyncTunnelHTTPConnection ['https://api.dexscreener.com:443', HTTP/1.1, CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http11.py", line 136, in handle_async_request
+    raise exc
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http11.py", line 106, in handle_async_request
+    ) = await self._receive_response_headers(**kwargs)
+              │    │                           └ {'request': <Request [b'GET']>}
+              │    └ <function AsyncHTTP11Connection._receive_response_headers at 0x0000013260E6DB20>
+              └ <AsyncHTTP11Connection ['https://api.dexscreener.com:443', CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http11.py", line 177, in _receive_response_headers
+    event = await self._receive_event(timeout=timeout)
+                  │    │                      └ 15
+                  │    └ <function AsyncHTTP11Connection._receive_event at 0x0000013260E6DC60>
+                  └ <AsyncHTTP11Connection ['https://api.dexscreener.com:443', CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http11.py", line 217, in _receive_event
+    data = await self._network_stream.read(
+                 │    │               └ <function AnyIOStream.read at 0x0000013260E8E3E0>
+                 │    └ <httpcore._backends.anyio.AnyIOStream object at 0x00000132609EDB80>
+                 └ <AsyncHTTP11Connection ['https://api.dexscreener.com:443', CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_backends\anyio.py", line 32, in read
+    with map_exceptions(exc_map):
+         │              └ {<class 'TimeoutError'>: <class 'httpcore.ReadTimeout'>, <class 'anyio.BrokenResourceError'>: <class 'httpcore.ReadError'>, <...
+         └ <function map_exceptions at 0x0000013260B5EF20>
+  File "C:\Python313\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    │    │   │     └ TimeoutError()
+    │    │   └ <method 'throw' of 'generator' objects>
+    │    └ <generator object map_exceptions at 0x0000013260F39F30>
+    └ <contextlib._GeneratorContextManager object at 0x0000013262184BB0>
+  File "C:\Python313\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+          └ <class 'httpcore.ReadTimeout'>
+
+httpcore.ReadTimeout
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Python313\Lib\site-packages\uvicorn\__main__.py", line 4, in <module>
+    uvicorn.main()
+    │       └ <Command main>
+    └ <module 'uvicorn' from 'C:\\Python313\\Lib\\site-packages\\uvicorn\\__init__.py'>
+  File "C:\Python313\Lib\site-packages\click\core.py", line 1442, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {}
+           │    │     └ ()
+           │    └ <function Command.main at 0x000001325E2FC9A0>
+           └ <Command main>
+  File "C:\Python313\Lib\site-packages\click\core.py", line 1363, in main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x000001325E456F90>
+         │    └ <function Command.invoke at 0x000001325E2FC680>
+         └ <Command main>
+  File "C:\Python313\Lib\site-packages\click\core.py", line 1226, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'host': '0.0.0.0', 'port': 8000, 'app': 'main:app', 'uds': None, 'fd': None, 'reload': False, 'reload_dirs': (), 'reload_inc...
+           │   │      │    │           └ <click.core.Context object at 0x000001325E456F90>
+           │   │      │    └ <function main at 0x000001325E53A3E0>
+           │   │      └ <Command main>
+           │   └ <function Context.invoke at 0x000001325E2F3880>
+           └ <click.core.Context object at 0x000001325E456F90>
+  File "C:\Python313\Lib\site-packages\click\core.py", line 794, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'host': '0.0.0.0', 'port': 8000, 'app': 'main:app', 'uds': None, 'fd': None, 'reload': False, 'reload_dirs': (), 'reload_inc...
+           │         └ ()
+           └ <function main at 0x000001325E53A3E0>
+  File "C:\Python313\Lib\site-packages\uvicorn\main.py", line 433, in main
+    run(
+    └ <function run at 0x000001325E39A5C0>
+  File "C:\Python313\Lib\site-packages\uvicorn\main.py", line 606, in run
+    server.run()
+    │      └ <function Server.run at 0x000001325E3C94E0>
+    └ <uvicorn.server.Server object at 0x000001325E4578C0>
+  File "C:\Python313\Lib\site-packages\uvicorn\server.py", line 75, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+           │           │    │             │                      │    │      └ <function Config.get_loop_factory at 0x000001325E376E80>
+           │           │    │             │                      │    └ <uvicorn.config.Config object at 0x000001325E457230>
+           │           │    │             │                      └ <uvicorn.server.Server object at 0x000001325E4578C0>
+           │           │    │             └ None
+           │           │    └ <function Server.serve at 0x000001325E3C9580>
+           │           └ <uvicorn.server.Server object at 0x000001325E4578C0>
+           └ <function run at 0x000001325C611760>
+  File "C:\Python313\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           │      │   └ <coroutine object Server.serve at 0x000001325E517CA0>
+           │      └ <function Runner.run at 0x000001325E0DFB00>
+           └ <asyncio.runners.Runner object at 0x000001325E457B60>
+  File "C:\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<Server.serve() running at C:\Python313\Lib\site-packages\uvicorn\server.py:79> wait_for=<Fu...
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x000001325E0DD6C0>
+           │    └ <ProactorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x000001325E457B60>
+  File "C:\Python313\Lib\asyncio\base_events.py", line 707, in run_until_complete
+    self.run_forever()
+    │    └ <function BaseEventLoop.run_forever at 0x000001325E0DD620>
+    └ <ProactorEventLoop running=True closed=False debug=False>
+  File "C:\Python313\Lib\asyncio\base_events.py", line 678, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x000001325E0DF420>
+    └ <ProactorEventLoop running=True closed=False debug=False>
+  File "C:\Python313\Lib\asyncio\base_events.py", line 2033, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x000001325C6125C0>
+    └ <Handle <_asyncio.TaskStepMethWrapper object at 0x0000013260F77F40>()>
+  File "C:\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle <_asyncio.TaskStepMethWrapper object at 0x0000013260F77F40>()>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle <_asyncio.TaskStepMethWrapper object at 0x0000013260F77F40>()>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle <_asyncio.TaskStepMethWrapper object at 0x0000013260F77F40>()>
+  File "C:\Python313\Lib\site-packages\apscheduler\executors\base.py", line 181, in run_coroutine_job
+    retval = await job.func(*job.args, **job.kwargs)
+                   │   │     │   │       │   └ <member 'kwargs' of 'Job' objects>
+                   │   │     │   │       └ <Job (id=degenclaw-poll name=PollingController.scheduled_scan)>
+                   │   │     │   └ <member 'args' of 'Job' objects>
+                   │   │     └ <Job (id=degenclaw-poll name=PollingController.scheduled_scan)>
+                   │   └ <member 'func' of 'Job' objects>
+                   └ <Job (id=degenclaw-poll name=PollingController.scheduled_scan)>
+
+  File "D:\AAA-Project\017-DegenClaw-Trading\backend\scheduler\scheduler.py", line 718, in scheduled_scan
+    await self.scan_once(trigger="auto")
+          │    └ <function PollingController.scan_once at 0x00000132608F8CC0>
+          └ <scheduler.scheduler.PollingController object at 0x0000013260AE1940>
+
+  File "D:\AAA-Project\017-DegenClaw-Trading\backend\scheduler\scheduler.py", line 725, in scan_once
+    summary = await run_collection(self.database, self.settings)
+                    │              │    │         │    └ Settings(app_name='DegenClaw Alpha Engine', db_path=WindowsPath('data/degenclaw.db'), host='0.0.0.0', port=8000, cors_origins...
+                    │              │    │         └ <scheduler.scheduler.PollingController object at 0x0000013260AE1940>
+                    │              │    └ <db.database.Database object at 0x0000013260AE17F0>
+                    │              └ <scheduler.scheduler.PollingController object at 0x0000013260AE1940>
+                    └ <function run_collection at 0x00000132608F8860>
+
+> File "D:\AAA-Project\017-DegenClaw-Trading\backend\scheduler\scheduler.py", line 106, in run_collection
+    market_data = await market.fetch_batch(list(set(token_addresses)))
+                        │      │                    └ ['0xa595426BeB0337Fdc5AaD9F5952147fF588B7684', '0x8E2a6AF9139398bEdc1bB0aF57c8a4e37aF31F02', '0x1C275aeC4Ce398bd34437Cb6f1073...
+                        │      └ <function MarketCollector.fetch_batch at 0x000001325F7AEF20>
+                        └ <collectors.degenclaw_collector.MarketCollector object at 0x0000013260ECBD40>
+
+  File "D:\AAA-Project\017-DegenClaw-Trading\backend\collectors\degenclaw_collector.py", line 183, in fetch_batch
+    data = await self.fetch_token_data(addr)
+                 │    │                └ '0x7dcf2de08e918a65617eA07d94e95C84b234796A'
+                 │    └ <function MarketCollector.fetch_token_data at 0x000001325F7AEE80>
+                 └ <collectors.degenclaw_collector.MarketCollector object at 0x0000013260ECBD40>
+
+  File "D:\AAA-Project\017-DegenClaw-Trading\backend\collectors\degenclaw_collector.py", line 155, in fetch_token_data
+    response = await client.get(
+                     │      └ <function AsyncClient.get at 0x000001325F6B5620>
+                     └ <httpx.AsyncClient object at 0x0000013260E2A510>
+
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1768, in get
+    return await self.request(
+                 │    └ <function AsyncClient.request at 0x000001325F6B51C0>
+                 └ <httpx.AsyncClient object at 0x0000013260E2A510>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+                 │    │    │             │                      └ <httpx._client.UseClientDefault object at 0x000001325F68CAD0>
+                 │    │    │             └ <httpx._client.UseClientDefault object at 0x000001325F68CAD0>
+                 │    │    └ <Request('GET', 'https://api.dexscreener.com/latest/dex/tokens/0x7dcf2de08e918a65617eA07d94e95C84b234796A')>
+                 │    └ <function AsyncClient.send at 0x000001325F6B53A0>
+                 └ <httpx.AsyncClient object at 0x0000013260E2A510>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+                     │    └ <function AsyncClient._send_handling_auth at 0x000001325F6B5440>
+                     └ <httpx.AsyncClient object at 0x0000013260E2A510>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+                     │    └ <function AsyncClient._send_handling_redirects at 0x000001325F6B54E0>
+                     └ <httpx.AsyncClient object at 0x0000013260E2A510>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+                     │    │                    └ <Request('GET', 'https://api.dexscreener.com/latest/dex/tokens/0x7dcf2de08e918a65617eA07d94e95C84b234796A')>
+                     │    └ <function AsyncClient._send_single_request at 0x000001325F6B5580>
+                     └ <httpx.AsyncClient object at 0x0000013260E2A510>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+                     │         │                    └ <Request('GET', 'https://api.dexscreener.com/latest/dex/tokens/0x7dcf2de08e918a65617eA07d94e95C84b234796A')>
+                     │         └ <function AsyncHTTPTransport.handle_async_request at 0x000001325F6A6200>
+                     └ <httpx.AsyncHTTPTransport object at 0x00000132620D7B10>
+  File "C:\Python313\Lib\site-packages\httpx\_transports\default.py", line 393, in handle_async_request
+    with map_httpcore_exceptions():
+         └ <function map_httpcore_exceptions at 0x000001325F6A5800>
+  File "C:\Python313\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    │    │   │     └ ReadTimeout(TimeoutError())
+    │    │   └ <method 'throw' of 'generator' objects>
+    │    └ <generator object map_httpcore_exceptions at 0x0000013260E57C40>
+    └ <contextlib._GeneratorContextManager object at 0x00000132621875B0>
+  File "C:\Python313\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+          │          └ ''
+          └ <class 'httpx.ReadTimeout'>
+
+httpx.ReadTimeout
+2026-05-04 15:49:37 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 07:53:27 UTC)" executed successfully
+2026-05-04 15:53:27 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_outcome_check (trigger: interval[0:15:00], next run at: 2026-05-04 08:08:27 UTC)" (scheduled at 2026-05-04 07:53:27.410555+00:00)
+2026-05-04 15:53:27 | INFO    | scheduler.scheduler | Outcome check: checked=0 correct=0 wrong=0 skipped=0
+2026-05-04 15:53:27 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_outcome_check (trigger: interval[0:15:00], next run at: 2026-05-04 08:08:27 UTC)" executed successfully
+2026-05-04 15:53:27 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 07:58:27 UTC)" (scheduled at 2026-05-04 07:53:27.410555+00:00)
+2026-05-04 15:53:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-05-04 15:53:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-05-04 15:53:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-05-04 15:53:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-05-04 15:53:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-05-04 15:53:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-05-04 15:53:30 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-05-04 15:53:32 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-05-04 15:53:32 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-05-04 15:53:32 | INFO    | scheduler.scheduler | 赛季过滤: 移除 245 个非当季 Agent (剩 97)，排名已重分配
+2026-05-04 15:53:34 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3bDbb25C9A1660511feac2b217da9eB7577c383a "HTTP/1.1 200 OK"
+2026-05-04 15:53:36 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8F39a198E7728c4e3bDBDf1cab913cf79fC35375 "HTTP/1.1 200 OK"
+2026-05-04 15:53:37 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xBfF0c490A74F7C06d7D700814F49530a7E274ABe "HTTP/1.1 200 OK"
+2026-05-04 15:53:38 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x858ad099DeAD69FD64e055cbE7b6c224b7bF7793 "HTTP/1.1 200 OK"
+2026-05-04 15:53:40 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x91Ad55252a9F084e8dBf61c2f3cA3b2Cc7699980 "HTTP/1.1 200 OK"
+2026-05-04 15:53:42 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4D80fd4d63CAD43eF25DBd63f6bb0988B5E5E9d1 "HTTP/1.1 200 OK"
+2026-05-04 15:53:43 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xA3d46ebc52494c3A8bC4b3c1f6d1a7Bc806c959A "HTTP/1.1 200 OK"
+2026-05-04 15:53:45 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x847B1e59c16F4Fe0817106cEbEb999335121e678 "HTTP/1.1 200 OK"
+2026-05-04 15:53:47 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4dBb9F7a72C62A16D8F60a370Ea4193a2E3093B5 "HTTP/1.1 200 OK"
+2026-05-04 15:53:48 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa595426BeB0337Fdc5AaD9F5952147fF588B7684 "HTTP/1.1 200 OK"
+2026-05-04 15:53:51 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc43991D36AE2A0671dFF2483698F4B5d5cDC1508 "HTTP/1.1 200 OK"
+2026-05-04 15:53:53 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xB93F7acF24C4184fF783E827A5e9427eDC894d10 "HTTP/1.1 200 OK"
+2026-05-04 15:53:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x431d712AC82CB73c5B98BBEF0ed7cDFeF7D4aCfC "HTTP/1.1 200 OK"
+2026-05-04 15:53:55 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xF62711E12D3Bf4FF4CF7cD3dAD6E76Cd22272EeC "HTTP/1.1 200 OK"
+2026-05-04 15:53:57 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x70693d9d4Ca05d38256cFDfD8Ffc1B7816A670dC "HTTP/1.1 200 OK"
+2026-05-04 15:54:00 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc2BCeB0EE69455da32aBB10A5Ba81C0299a925C8 "HTTP/1.1 200 OK"
+2026-05-04 15:54:02 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x968Bb30aE87051860f413c57BCF085502634E787 "HTTP/1.1 200 OK"
+2026-05-04 15:54:04 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4E6eF3778D493550B5eef5ae6141bF9Bfc2B1bBC "HTTP/1.1 200 OK"
+2026-05-04 15:54:05 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x41FDE6Ce39D79706D7C6028D662059D00E10f99f "HTTP/1.1 200 OK"
+2026-05-04 15:54:08 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x7dcf2de08e918a65617eA07d94e95C84b234796A "HTTP/1.1 200 OK"
+2026-05-04 15:54:09 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xfc89605F3c09d70ff3Ad00BAB53A039D44C5a326 "HTTP/1.1 200 OK"
+2026-05-04 15:54:11 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x58940e9b00dA1309a5bF1B148CCd1eedF6BA026f "HTTP/1.1 200 OK"
+2026-05-04 15:54:14 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x915C135D2CbCAd68E5C30f1cEa0ee7129f57fD03 "HTTP/1.1 200 OK"
+2026-05-04 15:54:15 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x5f882caFdfA095Cb85D03DA388d162C80aECc5f4 "HTTP/1.1 200 OK"
+2026-05-04 15:54:18 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x39dBF1e2Bce3509b51876d526489D1Ec606b3A77 "HTTP/1.1 200 OK"
+2026-05-04 15:54:21 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xC44141a684f6AA4E36cD9264ab55550B03C88643 "HTTP/1.1 200 OK"
+2026-05-04 15:54:23 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3cF91d1885e1AE40aB8b34E18253418C717e023B "HTTP/1.1 200 OK"
+2026-05-04 15:54:24 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xb29B1D55Af9a2E478297a64a13b5AE31C502Dd46 "HTTP/1.1 200 OK"
+2026-05-04 15:54:27 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa9C44e4FfbBF18a237C15f2d63D82AB793747237 "HTTP/1.1 200 OK"
+2026-05-04 15:54:28 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4363B533aA4d2b7aF3c88ac0f82871bf3da1958f "HTTP/1.1 200 OK"
+2026-05-04 15:54:30 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1903160806e9eC3C77E31C6821Ff8592Dee9963c "HTTP/1.1 200 OK"
+2026-05-04 15:54:32 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1004D5F5f230234ccA32a28dc12B0F2CBC677C1D "HTTP/1.1 200 OK"
+2026-05-04 15:54:34 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xd1F39D77feDc4D12F0Ec327b2698f918F1bD3cDB "HTTP/1.1 200 OK"
+2026-05-04 15:54:37 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa9F0C14C5D3Fc94C8B6b3c095fEcE3AD41989D1A "HTTP/1.1 200 OK"
+2026-05-04 15:54:39 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xdFa3d9Bedd9594618877D973fD01578a280b962a "HTTP/1.1 200 OK"
+2026-05-04 15:54:41 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xcbBC817033Be0A83911B401624dE155550c27cC0 "HTTP/1.1 200 OK"
+2026-05-04 15:54:43 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x55F8076BBa812721Aa8e10D1f77Fe5CD0389CdD0 "HTTP/1.1 200 OK"
+2026-05-04 15:54:45 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xdbe92cac226eCFEDC04BF6F1826f5Abbc3acd890 "HTTP/1.1 200 OK"
+2026-05-04 15:54:48 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xb6d0bFC3d1368Da2c403A950B36904F55a115690 "HTTP/1.1 200 OK"
+2026-05-04 15:54:49 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xaCd85F0bE2Bf5b47ceA13bDcfA89E8D36FA2786D "HTTP/1.1 200 OK"
+2026-05-04 15:54:51 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xC841b4eaD3F70bE99472FFdB88E5c3C7aF6A481a "HTTP/1.1 200 OK"
+2026-05-04 15:54:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xcE545B32D33c071d4DaB9dc6B1C629ce46b1eA53 "HTTP/1.1 200 OK"
+2026-05-04 15:54:55 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa64F48a161D378091A22498c2D8FAa76874e4544 "HTTP/1.1 200 OK"
+2026-05-04 15:54:58 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8766CaD708b22bb4795c501c1E36e30f56444843 "HTTP/1.1 200 OK"
+2026-05-04 15:55:00 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x035c2c656965897C4E9Fc7b05C8F69AeB0b38925 "HTTP/1.1 200 OK"
+2026-05-04 15:55:02 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x9dCa499CaF25976744DB4c9C3d1703DF64fb33EB "HTTP/1.1 200 OK"
+2026-05-04 15:55:04 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xF487A8dD9b2009f6fF02E0100A16465EC9eBC7dd "HTTP/1.1 200 OK"
+2026-05-04 15:55:05 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x73bf711556F8bdF7E344B4705e2f7B3B8b38a3E8 "HTTP/1.1 200 OK"
+2026-05-04 15:55:06 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x10ac8FbfF5750B474D3D173d0349e51F6736eFD0 "HTTP/1.1 200 OK"
+2026-05-04 15:55:09 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8E2a6AF9139398bEdc1bB0aF57c8a4e37aF31F02 "HTTP/1.1 200 OK"
+2026-05-04 15:55:12 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4cfCB1113F0935BfF8b19F156B8Cb27B4674a1A8 "HTTP/1.1 200 OK"
+2026-05-04 15:55:14 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x09938Fe74Fb4a564465A521f08824F8Cd00db8db "HTTP/1.1 200 OK"
+2026-05-04 15:55:16 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc7AF1C5D0A6723A36BEa44FD910Cd090Ed77F332 "HTTP/1.1 200 OK"
+2026-05-04 15:55:19 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x15Ec9112637f3fE3aeA458D7e1e97d700b13E9Db "HTTP/1.1 200 OK"
+2026-05-04 15:55:21 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xbfa733702305280F066D470afDFA784fA70e2649 "HTTP/1.1 200 OK"
+2026-05-04 15:55:24 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x6CBeE386E6E50A5878375169868F01666810b62B "HTTP/1.1 200 OK"
+2026-05-04 15:55:26 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x576CE00950f49b0bA696Ed105087B6e686641900 "HTTP/1.1 200 OK"
+2026-05-04 15:55:27 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x16BccAe9A9Fe19D765517438641f6fC1A4AC47C2 "HTTP/1.1 200 OK"
+2026-05-04 15:55:29 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x2b9825a4A0f8457a44D66d6776083230c22C5262 "HTTP/1.1 200 OK"
+2026-05-04 15:55:30 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x82f98aA2cd92e4066f8c531Ab4b3d4C35f58e345 "HTTP/1.1 200 OK"
+2026-05-04 15:55:34 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x89C202e98F41CDEB7b397E35a0882315D2fFC8De "HTTP/1.1 200 OK"
+2026-05-04 15:55:36 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x5750d0655c90E8279B0B1a9D8312085bA6DfB7D6 "HTTP/1.1 200 OK"
+2026-05-04 15:55:37 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xCD9286753033CfDe5A5C4f7470443951Cd6cdF42 "HTTP/1.1 200 OK"
+2026-05-04 15:55:39 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xD1a9aB741e5b95f040Bd8F134865A93F3bf04Dc7 "HTTP/1.1 200 OK"
+2026-05-04 15:55:42 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x925a3fAC4a143aeEaF53D1eC3A83FA4Cf7453556 "HTTP/1.1 200 OK"
+2026-05-04 15:55:46 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x62734ff6B7275ED265C1518069Fd5a4d38a7B56c "HTTP/1.1 200 OK"
+2026-05-04 15:55:47 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3781934F9CC3B5157EAb5F663B144103409CFfFB "HTTP/1.1 200 OK"
+2026-05-04 15:55:51 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x11E18A052101dAe01aBe8E9Dc1BAaDa1bC592989 "HTTP/1.1 200 OK"
+2026-05-04 15:55:52 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1f6b668cce6F2E10CDb9d271Df71595151c20BB0 "HTTP/1.1 200 OK"
+2026-05-04 15:55:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x2c863B77ee12CB33Db605ED32D7c6937d4Be30A9 "HTTP/1.1 200 OK"
+2026-05-04 15:55:55 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa2d4Aec94BA0896d95ccC5451C9525b9ec0314De "HTTP/1.1 200 OK"
+2026-05-04 15:55:57 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x320A1b0E79E1B220911C661448CB1a626e868F92 "HTTP/1.1 200 OK"
+2026-05-04 15:55:58 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xbBEe89414103D1f60B5FDfdC065Ff375aF16FcB9 "HTTP/1.1 200 OK"
+2026-05-04 15:56:00 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1D05246a51301B5ce364021F9288146cDb0C9Ea0 "HTTP/1.1 200 OK"
+2026-05-04 15:56:01 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa4541B3bE701989d0a33cFA3a5ec1a39A151a6b7 "HTTP/1.1 200 OK"
+2026-05-04 15:56:03 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc04d3C06E2faa7a7F1B8063B84BA45ad81d30c9c "HTTP/1.1 200 OK"
+2026-05-04 15:56:04 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x9F35d168DC2207794B6324BC7a71a439Cce84063 "HTTP/1.1 200 OK"
+2026-05-04 15:56:06 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xFbbb659b1B3590A8C2b6C1FAa01d365542700d3F "HTTP/1.1 200 OK"
+2026-05-04 15:56:09 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x37E9fFFE86E13D0DE7F40Ea7867F735C65851d9f "HTTP/1.1 200 OK"
+2026-05-04 15:56:13 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8E513f3F06411e1EcFd8c05815a059ec58A3267d "HTTP/1.1 200 OK"
+2026-05-04 15:56:15 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1C275aeC4Ce398bd34437Cb6f107305992d50199 "HTTP/1.1 200 OK"
+2026-05-04 15:56:17 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x41bb71385AD8712464B01C5E5d8A1A8F4925A63c "HTTP/1.1 200 OK"
+2026-05-04 15:56:21 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x0Ea9E0fEe3AdC0A781dcaFf08B548438A6346e56 "HTTP/1.1 200 OK"
+2026-05-04 15:56:22 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xD7bBceA73EFF7bA3b632f7600a2D6Ea2094c84e9 "HTTP/1.1 200 OK"
+2026-05-04 15:56:23 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x719b944ea5A611611D167DB0B7Dae4624c09Fd43 "HTTP/1.1 200 OK"
+2026-05-04 15:56:24 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x593dC48a279B20c940E463c9ECb22Ed7B46bBf53 "HTTP/1.1 200 OK"
+2026-05-04 15:56:25 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x242057acD91bB1E6f567252762B5A9530D65D00b "HTTP/1.1 200 OK"
+2026-05-04 15:56:27 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x5Dafd1f74De4a529f712796FB7a6d0c12Eb6Ed50 "HTTP/1.1 200 OK"
+2026-05-04 15:56:28 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xdad9CC48E765330Cf3943f9a50De14D3519fb443 "HTTP/1.1 200 OK"
+2026-05-04 15:56:29 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xfC338BB6E31d2190501dC567CdAa7AB5A72544fD "HTTP/1.1 200 OK"
+2026-05-04 15:56:30 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x23ED30E4477245523707dd8ef2a4164000111d1C "HTTP/1.1 200 OK"
+2026-05-04 15:56:32 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x154972b37f39601Dc254982997cbB0b61D1cdCC3 "HTTP/1.1 200 OK"
+2026-05-04 15:56:34 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xFDC90D47aCaa7f681E5F63726D4E8a927cD68d13 "HTTP/1.1 200 OK"
+2026-05-04 15:56:35 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x9Bf886AC270c5ed9b5B63213f545c3c3ADBF22fE "HTTP/1.1 200 OK"
+2026-05-04 15:56:36 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x35C1E20FF22Aa8A0aFBA628d6dF3513602bBD4F8 "HTTP/1.1 200 OK"
+2026-05-04 15:56:39 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xb7A63Bf7751147452cB6A8383Be95681831932c7 "HTTP/1.1 200 OK"
+2026-05-04 15:56:40 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x36d094194fafBf57890f938Bf91d86598Ee265eE "HTTP/1.1 200 OK"
+2026-05-04 15:56:43 | WARNING | collectors.degenclaw_collector | fetch pot-agents failed: 
+2026-05-04 15:56:45 | INFO    | scoring.engine | 评分完成: 97 个 Agent
+2026-05-04 15:56:45 | INFO    | scheduler.scheduler | 评分完成: 97 个 Agent
+2026-05-04 15:56:45 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 07:58:27 UTC)" executed successfully
+2026-05-04 15:58:27 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 08:03:27 UTC)" (scheduled at 2026-05-04 07:58:27.410555+00:00)
+2026-05-04 15:58:27 | INFO    | apscheduler.executors.base | Running job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-05-04 08:13:27 UTC)" (scheduled at 2026-05-04 07:58:27.410555+00:00)
+2026-05-04 15:58:27 | INFO    | scheduler.scheduler | signal generation: 0 signals, 0 buys, 0 sells
+2026-05-04 15:58:27 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_signal_gen (trigger: interval[0:15:00], next run at: 2026-05-04 08:13:27 UTC)" executed successfully
+2026-05-04 15:58:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=50 "HTTP/1.1 200 "
+2026-05-04 15:58:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=300 "HTTP/1.1 200 "
+2026-05-04 15:58:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=0 "HTTP/1.1 200 "
+2026-05-04 15:58:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=200 "HTTP/1.1 200 "
+2026-05-04 15:58:28 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=100 "HTTP/1.1 200 "
+2026-05-04 15:58:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=250 "HTTP/1.1 200 "
+2026-05-04 15:58:29 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/leaderboard?limit=50&offset=150 "HTTP/1.1 200 "
+2026-05-04 15:58:31 | INFO    | httpx._client | HTTP Request: GET https://degen.virtuals.io/api/seasons "HTTP/1.1 200 "
+2026-05-04 15:58:31 | INFO    | collectors.season_manager | 当前赛季: Season 5 (2026-04-28 ~ 2026-05-05)
+2026-05-04 15:58:31 | INFO    | scheduler.scheduler | 赛季过滤: 移除 245 个非当季 Agent (剩 97)，排名已重分配
+2026-05-04 15:58:32 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3bDbb25C9A1660511feac2b217da9eB7577c383a "HTTP/1.1 200 OK"
+2026-05-04 15:58:34 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x8F39a198E7728c4e3bDBDf1cab913cf79fC35375 "HTTP/1.1 200 OK"
+2026-05-04 15:58:35 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xBfF0c490A74F7C06d7D700814F49530a7E274ABe "HTTP/1.1 200 OK"
+2026-05-04 15:58:37 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x858ad099DeAD69FD64e055cbE7b6c224b7bF7793 "HTTP/1.1 200 OK"
+2026-05-04 15:58:39 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x91Ad55252a9F084e8dBf61c2f3cA3b2Cc7699980 "HTTP/1.1 200 OK"
+2026-05-04 15:58:40 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4D80fd4d63CAD43eF25DBd63f6bb0988B5E5E9d1 "HTTP/1.1 200 OK"
+2026-05-04 15:58:42 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xA3d46ebc52494c3A8bC4b3c1f6d1a7Bc806c959A "HTTP/1.1 200 OK"
+2026-05-04 15:58:44 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x847B1e59c16F4Fe0817106cEbEb999335121e678 "HTTP/1.1 200 OK"
+2026-05-04 15:58:45 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4dBb9F7a72C62A16D8F60a370Ea4193a2E3093B5 "HTTP/1.1 200 OK"
+2026-05-04 15:58:48 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa595426BeB0337Fdc5AaD9F5952147fF588B7684 "HTTP/1.1 200 OK"
+2026-05-04 15:58:49 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc43991D36AE2A0671dFF2483698F4B5d5cDC1508 "HTTP/1.1 200 OK"
+2026-05-04 15:58:51 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xB93F7acF24C4184fF783E827A5e9427eDC894d10 "HTTP/1.1 200 OK"
+2026-05-04 15:58:52 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x431d712AC82CB73c5B98BBEF0ed7cDFeF7D4aCfC "HTTP/1.1 200 OK"
+2026-05-04 15:58:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xF62711E12D3Bf4FF4CF7cD3dAD6E76Cd22272EeC "HTTP/1.1 200 OK"
+2026-05-04 15:58:56 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x70693d9d4Ca05d38256cFDfD8Ffc1B7816A670dC "HTTP/1.1 200 OK"
+2026-05-04 15:58:59 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xc2BCeB0EE69455da32aBB10A5Ba81C0299a925C8 "HTTP/1.1 200 OK"
+2026-05-04 15:59:03 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x968Bb30aE87051860f413c57BCF085502634E787 "HTTP/1.1 200 OK"
+2026-05-04 15:59:05 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4E6eF3778D493550B5eef5ae6141bF9Bfc2B1bBC "HTTP/1.1 200 OK"
+2026-05-04 15:59:09 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x41FDE6Ce39D79706D7C6028D662059D00E10f99f "HTTP/1.1 200 OK"
+2026-05-04 15:59:12 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x7dcf2de08e918a65617eA07d94e95C84b234796A "HTTP/1.1 200 OK"
+2026-05-04 15:59:13 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xfc89605F3c09d70ff3Ad00BAB53A039D44C5a326 "HTTP/1.1 200 OK"
+2026-05-04 15:59:15 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x58940e9b00dA1309a5bF1B148CCd1eedF6BA026f "HTTP/1.1 200 OK"
+2026-05-04 15:59:16 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x915C135D2CbCAd68E5C30f1cEa0ee7129f57fD03 "HTTP/1.1 200 OK"
+2026-05-04 15:59:17 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x5f882caFdfA095Cb85D03DA388d162C80aECc5f4 "HTTP/1.1 200 OK"
+2026-05-04 15:59:21 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x39dBF1e2Bce3509b51876d526489D1Ec606b3A77 "HTTP/1.1 200 OK"
+2026-05-04 15:59:22 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xC44141a684f6AA4E36cD9264ab55550B03C88643 "HTTP/1.1 200 OK"
+2026-05-04 15:59:25 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x3cF91d1885e1AE40aB8b34E18253418C717e023B "HTTP/1.1 200 OK"
+2026-05-04 15:59:27 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xb29B1D55Af9a2E478297a64a13b5AE31C502Dd46 "HTTP/1.1 200 OK"
+2026-05-04 15:59:30 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa9C44e4FfbBF18a237C15f2d63D82AB793747237 "HTTP/1.1 200 OK"
+2026-05-04 15:59:31 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x4363B533aA4d2b7aF3c88ac0f82871bf3da1958f "HTTP/1.1 200 OK"
+2026-05-04 15:59:34 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1903160806e9eC3C77E31C6821Ff8592Dee9963c "HTTP/1.1 200 OK"
+2026-05-04 15:59:36 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x1004D5F5f230234ccA32a28dc12B0F2CBC677C1D "HTTP/1.1 200 OK"
+2026-05-04 15:59:37 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xd1F39D77feDc4D12F0Ec327b2698f918F1bD3cDB "HTTP/1.1 200 OK"
+2026-05-04 15:59:39 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa9F0C14C5D3Fc94C8B6b3c095fEcE3AD41989D1A "HTTP/1.1 200 OK"
+2026-05-04 15:59:42 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xdFa3d9Bedd9594618877D973fD01578a280b962a "HTTP/1.1 200 OK"
+2026-05-04 15:59:44 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xcbBC817033Be0A83911B401624dE155550c27cC0 "HTTP/1.1 200 OK"
+2026-05-04 15:59:45 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0x55F8076BBa812721Aa8e10D1f77Fe5CD0389CdD0 "HTTP/1.1 200 OK"
+2026-05-04 15:59:46 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xdbe92cac226eCFEDC04BF6F1826f5Abbc3acd890 "HTTP/1.1 200 OK"
+2026-05-04 15:59:47 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xb6d0bFC3d1368Da2c403A950B36904F55a115690 "HTTP/1.1 200 OK"
+2026-05-04 15:59:49 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xaCd85F0bE2Bf5b47ceA13bDcfA89E8D36FA2786D "HTTP/1.1 200 OK"
+2026-05-04 15:59:51 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xC841b4eaD3F70bE99472FFdB88E5c3C7aF6A481a "HTTP/1.1 200 OK"
+2026-05-04 15:59:52 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xcE545B32D33c071d4DaB9dc6B1C629ce46b1eA53 "HTTP/1.1 200 OK"
+2026-05-04 15:59:54 | INFO    | httpx._client | HTTP Request: GET https://api.dexscreener.com/latest/dex/tokens/0xa64F48a161D378091A22498c2D8FAa76874e4544 "HTTP/1.1 200 OK"
+2026-05-04 16:00:10 | ERROR   | logging | collection failed
+Traceback (most recent call last):
+
+  File "C:\Python313\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Python313\Lib\site-packages\httpx\_transports\default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+                 │    │     │                    └ <Request [b'GET']>
+                 │    │     └ <function AsyncConnectionPool.handle_async_request at 0x0000013260E6F880>
+                 │    └ <AsyncHTTPProxy [Requests: 0 active, 0 queued | Connections: 0 active, 0 idle]>
+                 └ <httpx.AsyncHTTPTransport object at 0x00000132620D6170>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 256, in handle_async_request
+    raise exc from None
+  File "C:\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 236, in handle_async_request
+    response = await connection.handle_async_request(
+                     │          └ <function AsyncTunnelHTTPConnection.handle_async_request at 0x0000013260E8CA40>
+                     └ <AsyncTunnelHTTPConnection ['https://api.dexscreener.com:443', HTTP/1.1, CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http_proxy.py", line 343, in handle_async_request
+    return await self._connection.handle_async_request(request)
+                 │    │           │                    └ <Request [b'GET']>
+                 │    │           └ <function AsyncHTTP11Connection.handle_async_request at 0x0000013260E6D8A0>
+                 │    └ <AsyncHTTP11Connection ['https://api.dexscreener.com:443', CLOSED, Request Count: 1]>
+                 └ <AsyncTunnelHTTPConnection ['https://api.dexscreener.com:443', HTTP/1.1, CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http11.py", line 136, in handle_async_request
+    raise exc
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http11.py", line 106, in handle_async_request
+    ) = await self._receive_response_headers(**kwargs)
+              │    │                           └ {'request': <Request [b'GET']>}
+              │    └ <function AsyncHTTP11Connection._receive_response_headers at 0x0000013260E6DB20>
+              └ <AsyncHTTP11Connection ['https://api.dexscreener.com:443', CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http11.py", line 177, in _receive_response_headers
+    event = await self._receive_event(timeout=timeout)
+                  │    │                      └ 15
+                  │    └ <function AsyncHTTP11Connection._receive_event at 0x0000013260E6DC60>
+                  └ <AsyncHTTP11Connection ['https://api.dexscreener.com:443', CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_async\http11.py", line 217, in _receive_event
+    data = await self._network_stream.read(
+                 │    │               └ <function AnyIOStream.read at 0x0000013260E8E3E0>
+                 │    └ <httpcore._backends.anyio.AnyIOStream object at 0x0000013260FB92C0>
+                 └ <AsyncHTTP11Connection ['https://api.dexscreener.com:443', CLOSED, Request Count: 1]>
+  File "C:\Python313\Lib\site-packages\httpcore\_backends\anyio.py", line 32, in read
+    with map_exceptions(exc_map):
+         │              └ {<class 'TimeoutError'>: <class 'httpcore.ReadTimeout'>, <class 'anyio.BrokenResourceError'>: <class 'httpcore.ReadError'>, <...
+         └ <function map_exceptions at 0x0000013260B5EF20>
+  File "C:\Python313\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    │    │   │     └ TimeoutError()
+    │    │   └ <method 'throw' of 'generator' objects>
+    │    └ <generator object map_exceptions at 0x0000013260F85120>
+    └ <contextlib._GeneratorContextManager object at 0x0000013260E9D0F0>
+  File "C:\Python313\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+          └ <class 'httpcore.ReadTimeout'>
+
+httpcore.ReadTimeout
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Python313\Lib\site-packages\uvicorn\__main__.py", line 4, in <module>
+    uvicorn.main()
+    │       └ <Command main>
+    └ <module 'uvicorn' from 'C:\\Python313\\Lib\\site-packages\\uvicorn\\__init__.py'>
+  File "C:\Python313\Lib\site-packages\click\core.py", line 1442, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {}
+           │    │     └ ()
+           │    └ <function Command.main at 0x000001325E2FC9A0>
+           └ <Command main>
+  File "C:\Python313\Lib\site-packages\click\core.py", line 1363, in main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x000001325E456F90>
+         │    └ <function Command.invoke at 0x000001325E2FC680>
+         └ <Command main>
+  File "C:\Python313\Lib\site-packages\click\core.py", line 1226, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'host': '0.0.0.0', 'port': 8000, 'app': 'main:app', 'uds': None, 'fd': None, 'reload': False, 'reload_dirs': (), 'reload_inc...
+           │   │      │    │           └ <click.core.Context object at 0x000001325E456F90>
+           │   │      │    └ <function main at 0x000001325E53A3E0>
+           │   │      └ <Command main>
+           │   └ <function Context.invoke at 0x000001325E2F3880>
+           └ <click.core.Context object at 0x000001325E456F90>
+  File "C:\Python313\Lib\site-packages\click\core.py", line 794, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'host': '0.0.0.0', 'port': 8000, 'app': 'main:app', 'uds': None, 'fd': None, 'reload': False, 'reload_dirs': (), 'reload_inc...
+           │         └ ()
+           └ <function main at 0x000001325E53A3E0>
+  File "C:\Python313\Lib\site-packages\uvicorn\main.py", line 433, in main
+    run(
+    └ <function run at 0x000001325E39A5C0>
+  File "C:\Python313\Lib\site-packages\uvicorn\main.py", line 606, in run
+    server.run()
+    │      └ <function Server.run at 0x000001325E3C94E0>
+    └ <uvicorn.server.Server object at 0x000001325E4578C0>
+  File "C:\Python313\Lib\site-packages\uvicorn\server.py", line 75, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+           │           │    │             │                      │    │      └ <function Config.get_loop_factory at 0x000001325E376E80>
+           │           │    │             │                      │    └ <uvicorn.config.Config object at 0x000001325E457230>
+           │           │    │             │                      └ <uvicorn.server.Server object at 0x000001325E4578C0>
+           │           │    │             └ None
+           │           │    └ <function Server.serve at 0x000001325E3C9580>
+           │           └ <uvicorn.server.Server object at 0x000001325E4578C0>
+           └ <function run at 0x000001325C611760>
+  File "C:\Python313\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           │      │   └ <coroutine object Server.serve at 0x000001325E517CA0>
+           │      └ <function Runner.run at 0x000001325E0DFB00>
+           └ <asyncio.runners.Runner object at 0x000001325E457B60>
+  File "C:\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<Server.serve() running at C:\Python313\Lib\site-packages\uvicorn\server.py:79> wait_for=<Fu...
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x000001325E0DD6C0>
+           │    └ <ProactorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x000001325E457B60>
+  File "C:\Python313\Lib\asyncio\base_events.py", line 707, in run_until_complete
+    self.run_forever()
+    │    └ <function BaseEventLoop.run_forever at 0x000001325E0DD620>
+    └ <ProactorEventLoop running=True closed=False debug=False>
+  File "C:\Python313\Lib\asyncio\base_events.py", line 678, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x000001325E0DF420>
+    └ <ProactorEventLoop running=True closed=False debug=False>
+  File "C:\Python313\Lib\asyncio\base_events.py", line 2033, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x000001325C6125C0>
+    └ <Handle <_asyncio.TaskStepMethWrapper object at 0x0000013260F5B2B0>()>
+  File "C:\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle <_asyncio.TaskStepMethWrapper object at 0x0000013260F5B2B0>()>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle <_asyncio.TaskStepMethWrapper object at 0x0000013260F5B2B0>()>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle <_asyncio.TaskStepMethWrapper object at 0x0000013260F5B2B0>()>
+  File "C:\Python313\Lib\site-packages\apscheduler\executors\base.py", line 181, in run_coroutine_job
+    retval = await job.func(*job.args, **job.kwargs)
+                   │   │     │   │       │   └ <member 'kwargs' of 'Job' objects>
+                   │   │     │   │       └ <Job (id=degenclaw-poll name=PollingController.scheduled_scan)>
+                   │   │     │   └ <member 'args' of 'Job' objects>
+                   │   │     └ <Job (id=degenclaw-poll name=PollingController.scheduled_scan)>
+                   │   └ <member 'func' of 'Job' objects>
+                   └ <Job (id=degenclaw-poll name=PollingController.scheduled_scan)>
+
+  File "D:\AAA-Project\017-DegenClaw-Trading\backend\scheduler\scheduler.py", line 718, in scheduled_scan
+    await self.scan_once(trigger="auto")
+          │    └ <function PollingController.scan_once at 0x00000132608F8CC0>
+          └ <scheduler.scheduler.PollingController object at 0x0000013260AE1940>
+
+  File "D:\AAA-Project\017-DegenClaw-Trading\backend\scheduler\scheduler.py", line 725, in scan_once
+    summary = await run_collection(self.database, self.settings)
+                    │              │    │         │    └ Settings(app_name='DegenClaw Alpha Engine', db_path=WindowsPath('data/degenclaw.db'), host='0.0.0.0', port=8000, cors_origins...
+                    │              │    │         └ <scheduler.scheduler.PollingController object at 0x0000013260AE1940>
+                    │              │    └ <db.database.Database object at 0x0000013260AE17F0>
+                    │              └ <scheduler.scheduler.PollingController object at 0x0000013260AE1940>
+                    └ <function run_collection at 0x00000132608F8860>
+
+> File "D:\AAA-Project\017-DegenClaw-Trading\backend\scheduler\scheduler.py", line 106, in run_collection
+    market_data = await market.fetch_batch(list(set(token_addresses)))
+                        │      │                    └ ['0xa595426BeB0337Fdc5AaD9F5952147fF588B7684', '0x8E2a6AF9139398bEdc1bB0aF57c8a4e37aF31F02', '0x1C275aeC4Ce398bd34437Cb6f1073...
+                        │      └ <function MarketCollector.fetch_batch at 0x000001325F7AEF20>
+                        └ <collectors.degenclaw_collector.MarketCollector object at 0x0000013260C82C10>
+
+  File "D:\AAA-Project\017-DegenClaw-Trading\backend\collectors\degenclaw_collector.py", line 183, in fetch_batch
+    data = await self.fetch_token_data(addr)
+                 │    │                └ '0x8766CaD708b22bb4795c501c1E36e30f56444843'
+                 │    └ <function MarketCollector.fetch_token_data at 0x000001325F7AEE80>
+                 └ <collectors.degenclaw_collector.MarketCollector object at 0x0000013260C82C10>
+
+  File "D:\AAA-Project\017-DegenClaw-Trading\backend\collectors\degenclaw_collector.py", line 155, in fetch_token_data
+    response = await client.get(
+                     │      └ <function AsyncClient.get at 0x000001325F6B5620>
+                     └ <httpx.AsyncClient object at 0x0000013260E2B7D0>
+
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1768, in get
+    return await self.request(
+                 │    └ <function AsyncClient.request at 0x000001325F6B51C0>
+                 └ <httpx.AsyncClient object at 0x0000013260E2B7D0>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+                 │    │    │             │                      └ <httpx._client.UseClientDefault object at 0x000001325F68CAD0>
+                 │    │    │             └ <httpx._client.UseClientDefault object at 0x000001325F68CAD0>
+                 │    │    └ <Request('GET', 'https://api.dexscreener.com/latest/dex/tokens/0x8766CaD708b22bb4795c501c1E36e30f56444843')>
+                 │    └ <function AsyncClient.send at 0x000001325F6B53A0>
+                 └ <httpx.AsyncClient object at 0x0000013260E2B7D0>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+                     │    └ <function AsyncClient._send_handling_auth at 0x000001325F6B5440>
+                     └ <httpx.AsyncClient object at 0x0000013260E2B7D0>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+                     │    └ <function AsyncClient._send_handling_redirects at 0x000001325F6B54E0>
+                     └ <httpx.AsyncClient object at 0x0000013260E2B7D0>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+                     │    │                    └ <Request('GET', 'https://api.dexscreener.com/latest/dex/tokens/0x8766CaD708b22bb4795c501c1E36e30f56444843')>
+                     │    └ <function AsyncClient._send_single_request at 0x000001325F6B5580>
+                     └ <httpx.AsyncClient object at 0x0000013260E2B7D0>
+  File "C:\Python313\Lib\site-packages\httpx\_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+                     │         │                    └ <Request('GET', 'https://api.dexscreener.com/latest/dex/tokens/0x8766CaD708b22bb4795c501c1E36e30f56444843')>
+                     │         └ <function AsyncHTTPTransport.handle_async_request at 0x000001325F6A6200>
+                     └ <httpx.AsyncHTTPTransport object at 0x00000132620D6170>
+  File "C:\Python313\Lib\site-packages\httpx\_transports\default.py", line 393, in handle_async_request
+    with map_httpcore_exceptions():
+         └ <function map_httpcore_exceptions at 0x000001325F6A5800>
+  File "C:\Python313\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    │    │   │     └ ReadTimeout(TimeoutError())
+    │    │   └ <method 'throw' of 'generator' objects>
+    │    └ <generator object map_httpcore_exceptions at 0x0000013260E57C40>
+    └ <contextlib._GeneratorContextManager object at 0x0000013260E9FA80>
+  File "C:\Python313\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+          │          └ ''
+          └ <class 'httpx.ReadTimeout'>
+
+httpx.ReadTimeout
+2026-05-04 16:00:10 | INFO    | apscheduler.executors.base | Job "PollingController.scheduled_scan (trigger: interval[0:05:00], next run at: 2026-05-04 08:03:27 UTC)" executed successfully

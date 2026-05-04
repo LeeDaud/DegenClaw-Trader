@@ -23,6 +23,10 @@ REVERSAL_LEVELS = (1, 3, 5)
 # 每级别冷却（秒）
 LEVEL_COOLDOWN_SECONDS = 900  # 15 分钟
 
+# 反转必须回撤至少此比例的趋势涨幅/跌幅（防单边行情中的小反转误报）
+# 0.3 = 反转需回撤 ≥ 趋势幅度的 30%
+MIN_RETRACEMENT_RATIO = 0.3
+
 # 趋势强度分级
 TREND_STRENGTH_BANDS = [
     (12, 3.0),   # 12+ → ×3.0
@@ -199,34 +203,42 @@ class CandleAnalyzer:
             return None
 
         # 5. 涨跌幅计算
-        #    prices[0] = 最新价, 取趋势段的起始价
-        #    方向序列中，索引 reversal_count 是趋势段的第一根方向
-        #    对应的价格索引也要推算
-        trend_start_price = trend_length_price = None
-        rev_price_count = 0
-        # 从最新的有效价格向旧数：前 reversal_count 个对应反转段
-        # 设 direction 序列长度 M，有效价格序列长度 N = M + 1
-        # dirs[0..R-1] = reversal, dirs[R..R+T-1] = trend
-        # 对应的价格索引:
-        #   反转段最新价 = valid_prices[0]
-        #   反转段最旧价 = valid_prices[reversal_count - 1]  # 反转段最后(最旧)一根的价格
-        #   趋势段最新价 = valid_prices[reversal_count]      # 趋势段第一根
-        #   趋势段最旧价 = valid_prices[min(reversal_count + trend_length - 1, len(valid_prices) - 1)]
+        #    方向序列 dirs[0..R-1] = 反转段（R=reversal_count），涉及 R+1 个价格
+        #    dirs[R..R+T-1] = 趋势段（T=trend_length），涉及 T+1 个价格
+        #    价格索引关系：
+        #      反转段：最新价 valid_prices[0] → 最旧价 valid_prices[R]
+        #      趋势段：最新价 valid_prices[R] → 最旧价 valid_prices[R+T]
         r_recent = valid_prices[0]
-        r_oldest = valid_prices[min(reversal_count - 1, len(valid_prices) - 1)]
+        r_oldest = valid_prices[min(reversal_count, len(valid_prices) - 1)]
         t_recent = valid_prices[min(reversal_count, len(valid_prices) - 1)]
-        t_oldest = valid_prices[min(reversal_count + trend_length - 1, len(valid_prices) - 1)]
+        t_oldest = valid_prices[min(reversal_count + trend_length, len(valid_prices) - 1)]
 
         price_change_trend_pct = (t_recent - t_oldest) / t_oldest * 100
         price_change_reversal_pct = (r_recent - r_oldest) / r_oldest * 100
+
+        # 8. 单边行情过滤：反转幅度需达到趋势幅度的 MIN_RETRACEMENT_RATIO
+        trend_magnitude = abs(price_change_trend_pct)
+        reversal_magnitude = abs(price_change_reversal_pct)
+        if trend_magnitude > 0 and reversal_magnitude < trend_magnitude * MIN_RETRACEMENT_RATIO:
+            return None  # 小反转，不影响单边趋势
 
         # 6. 反转段成交量（取最大值）
         reversal_volumes = valid_volumes[:reversal_count]
         volume_at_reversal = max(reversal_volumes) if reversal_volumes else 0.0
 
-        # 7. 严重度
+        # 7. 严重度 + 方向
         severity = _calc_severity(reversal_count, trend_length)
         direction = "bearish" if is_bearish else "bullish"
+
+        # 9. 全局方向判断：整体窗口明显单边时同向"反转"是噪声
+        #    例：全程 80% 上涨 +24%，最新 5 根上涨不是"下跌后的反转"而是上涨延续
+        if len(dirs) >= 6:
+            up_ratio = sum(1 for d in dirs if d == "up") / len(dirs)
+            full_change = (valid_prices[0] - valid_prices[-1]) / valid_prices[-1] * 100
+            if direction == "bullish" and up_ratio > 0.6 and full_change > 5:
+                return None
+            if direction == "bearish" and (1 - up_ratio) > 0.6 and full_change < -5:
+                return None
 
         return {
             "direction": direction,
