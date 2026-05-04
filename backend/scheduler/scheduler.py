@@ -11,6 +11,7 @@ from db.models import (
     build_event_id, utc_now_iso,
 )
 from collectors.degenclaw_collector import DegenClawCollector, MarketCollector, AIPotCollector
+from collectors.price_ticker import PriceTicker
 from collectors.season_manager import SeasonManager
 from notifiers.feishu_notifier import FeishuNotifier
 from parsers.degenclaw_parser import DegenClawParser
@@ -19,6 +20,7 @@ from calibration.outcome_tracker import OutcomeTracker
 from calibration.agent_volatility import AgentVolatilityTracker
 from signals.signal_engine import SignalEngine
 from signals.signal_state import SignalStateManager
+from signals.candle_analyzer import CandleAnalyzer
 from decision.event_window import EventWindowManager
 from decision.engine import TradingDecisionEngine, DecisionInput
 from decision.paper_trader import PaperTrader, PaperPosition
@@ -37,6 +39,10 @@ _POT_PNL_COOLDOWN_SECONDS = 900
 # 信号状态管理器（跨采集周期持久化，方向确认计数需要跨周期累积）
 _state_manager: SignalStateManager | None = None
 
+# 高频价格采集器 + 烛图分析器（独立于主采集周期）
+_price_ticker: PriceTicker | None = None
+_candle_analyzer: CandleAnalyzer | None = None
+
 
 def _get_state_manager() -> SignalStateManager:
     global _state_manager
@@ -45,7 +51,22 @@ def _get_state_manager() -> SignalStateManager:
     return _state_manager
 
 
-async def run_collection(database: Database, settings: Settings) -> dict[str, int]:
+def _get_price_ticker(settings: Settings) -> PriceTicker:
+    global _price_ticker
+    if _price_ticker is None:
+        _price_ticker = PriceTicker(settings)
+    return _price_ticker
+
+
+def _get_candle_analyzer(database: Database) -> CandleAnalyzer:
+    global _candle_analyzer
+    if _candle_analyzer is None:
+        _candle_analyzer = CandleAnalyzer(database)
+    return _candle_analyzer
+
+
+async def run_collection(database: Database, settings: Settings,
+                         price_ticker: PriceTicker | None = None) -> dict[str, int]:
     """执行一轮完整采集"""
     parser = DegenClawParser()
     degenclaw = DegenClawCollector(settings)
@@ -102,6 +123,9 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
 
         # 2. 采集 Token 市场数据
         token_addresses = [a.token_address for a in agents if a.token_address]
+        # 更新高频价格采集器的地址缓存
+        if price_ticker and token_addresses:
+            price_ticker.update_address_cache(token_addresses)
         if token_addresses:
             market_data = await market.fetch_batch(list(set(token_addresses)))
             market_snapshots = []
@@ -605,6 +629,63 @@ async def run_signal_generation(database: Database, settings: Settings) -> dict[
     return summary
 
 
+async def run_price_tick(database: Database, settings: Settings) -> dict[str, int]:
+    """执行一轮高频价格采集 + 烛图反转分析"""
+    if not settings.price_tick_enabled:
+        return {"ticks": 0, "alerts": 0}
+
+    ticker = _get_price_ticker(settings)
+    analyzer = _get_candle_analyzer(database)
+    now = utc_now_iso()
+    summary = {"ticks": 0, "alerts": 0}
+
+    try:
+        ticks = await ticker.tick()
+        if ticks:
+            database.insert_price_ticks(ticks)
+            summary["ticks"] = len(ticks)
+
+            # 烛图反转分析
+            alerts = analyzer.run_check()
+            if alerts:
+                summary["alerts"] = len(alerts)
+
+                # 飞书通知
+                if settings.feishu_alerts_enabled:
+                    notifier = FeishuNotifier(settings.feishu_webhook_url)
+                    if notifier.is_configured():
+                        alert_dicts = [a.as_record() for a in alerts]
+                        sent = notifier.send_alerts_batch(alert_dicts)
+                        if sent > 0:
+                            for alert in alerts:
+                                database.mark_alert_notified(alert.alert_id)
+                        logger.info("烛图反转: %d 条预警, 飞书推送 %d", len(alerts), sent)
+
+        database.insert_system_event(SystemEvent(
+            event_id=build_event_id(),
+            module="price_tick",
+            level="info",
+            event="price_tick_completed",
+            detail=f"ticks={summary['ticks']} alerts={summary['alerts']}",
+            trace_id=build_event_id(),
+            created_at=now,
+        ))
+
+    except Exception as exc:
+        logger.exception("price tick failed: %s", exc)
+        database.insert_system_event(SystemEvent(
+            event_id=build_event_id(),
+            module="price_tick",
+            level="error",
+            event="price_tick_failed",
+            detail=str(exc),
+            trace_id=build_event_id(),
+            created_at=utc_now_iso(),
+        ))
+
+    return summary
+
+
 class PollingController:
     """定时采集控制器 — 参考 SignalHub PollingController 模式"""
 
@@ -614,6 +695,7 @@ class PollingController:
         self._started = False
         self._scan_lock = asyncio.Lock()
         self._signal_lock = asyncio.Lock()
+        self._price_tick_lock = asyncio.Lock()
         self.last_summary: dict[str, int] | None = None
         self.last_error: str | None = None
         self.last_started_at: str | None = None
@@ -630,6 +712,10 @@ class PollingController:
         self.last_full_calibration_at: str | None = None
         self.last_full_calibration_f1_old: float | None = None
         self.last_full_calibration_f1_new: float | None = None
+        # 高频价格 tick 状态追踪
+        self.last_price_tick_at: str | None = None
+        self.last_price_tick_summary: dict[str, int] | None = None
+        self.last_price_tick_error: str | None = None
         self.mode = "auto"
 
         if AsyncIOScheduler is not None:
@@ -695,6 +781,21 @@ class PollingController:
                 max_instances=1,
                 coalesce=True,
             )
+            # 高频价格采集 + 烛图反转分析（独立周期）
+            if settings.price_tick_enabled:
+                # 首次运行 = 主采集首次 + 一半tick间隔（错峰减少DB锁争用）
+                tick_first = first_run + timedelta(seconds=settings.price_tick_interval_seconds // 2)
+                self.scheduler.add_job(
+                    self.scheduled_price_tick,
+                    "interval",
+                    seconds=settings.price_tick_interval_seconds,
+                    kwargs={},
+                    id="degenclaw-price-tick",
+                    replace_existing=True,
+                    max_instances=1,
+                    coalesce=True,
+                    next_run_time=tick_first,
+                )
         else:
             self.scheduler = None
 
@@ -722,7 +823,8 @@ class PollingController:
             self.last_started_at = utc_now_iso()
             self.last_error = None
             try:
-                summary = await run_collection(self.database, self.settings)
+                ticker = _get_price_ticker(self.settings) if self.settings.price_tick_enabled else None
+                summary = await run_collection(self.database, self.settings, price_ticker=ticker)
                 self.last_completed_at = utc_now_iso()
                 self.last_summary = {**summary, "trigger": trigger}
                 return self.last_summary
@@ -750,6 +852,24 @@ class PollingController:
                 self.last_signal_completed_at = utc_now_iso()
                 self.last_signal_error = str(exc)
                 logger.exception("signal gen failed trigger=%s", trigger)
+                raise
+
+    async def scheduled_price_tick(self) -> None:
+        if self.mode != "auto":
+            return
+        await self.price_tick_once(trigger="auto")
+
+    async def price_tick_once(self, *, trigger: str) -> dict[str, int]:
+        async with self._price_tick_lock:
+            self.last_price_tick_at = utc_now_iso()
+            self.last_price_tick_error = None
+            try:
+                summary = await run_price_tick(self.database, self.settings)
+                self.last_price_tick_summary = {**summary, "trigger": trigger}
+                return self.last_price_tick_summary
+            except Exception as exc:
+                self.last_price_tick_error = str(exc)
+                logger.exception("price tick failed trigger=%s", trigger)
                 raise
 
     async def scheduled_outcome_check(self) -> None:
@@ -818,6 +938,14 @@ class PollingController:
                 "last_completed_at": self.last_signal_completed_at,
                 "last_error": self.last_signal_error,
                 "last_summary": self.last_signal_summary,
+            },
+            "price_tick": {
+                "is_running": self._price_tick_lock.locked(),
+                "interval_seconds": self.settings.price_tick_interval_seconds,
+                "enabled": self.settings.price_tick_enabled,
+                "last_run_at": self.last_price_tick_at,
+                "last_error": self.last_price_tick_error,
+                "last_summary": self.last_price_tick_summary,
             },
             "calibration": {
                 "outcome_check": {

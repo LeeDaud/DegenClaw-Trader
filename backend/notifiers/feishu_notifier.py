@@ -29,6 +29,8 @@ CARD_HEADER_TEMPLATES = {
     "price_dump": {"title": "📉 Token 价格暴跌", "color": "red"},
     "combined_surge": {"title": "🟢 综合看涨信号", "color": "green"},
     "combined_dump": {"title": "🔴 综合看跌信号", "color": "red"},
+    "reversal_bearish": {"title": "🔻 反转看跌信号", "color": "red"},
+    "reversal_bullish": {"title": "🟢 反转看涨信号", "color": "green"},
 }
 
 # 全局限速：两次批量发送之间至少间隔（秒）

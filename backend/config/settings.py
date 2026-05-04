@@ -53,6 +53,8 @@ class Settings:
     degenclaw_app_base_url: str
     dexscreener_endpoint: str | None
     poll_interval_seconds: int
+    price_tick_enabled: bool
+    price_tick_interval_seconds: int
     request_timeout_seconds: int
     log_level: str
     feishu_webhook_url: str | None
@@ -88,6 +90,8 @@ def load_settings() -> Settings:
         degenclaw_app_base_url=os.getenv("DEGENCLAW_APP_BASE_URL", "https://app.virtuals.io"),
         dexscreener_endpoint=os.getenv("DEXSCREENER_ENDPOINT") or None,
         poll_interval_seconds=max(int(os.getenv("POLL_INTERVAL_SECONDS", "60")), 5),
+        price_tick_enabled=_to_bool(os.getenv("DC_PRICE_TICK_ENABLED"), True),
+        price_tick_interval_seconds=max(int(os.getenv("DC_PRICE_TICK_INTERVAL_SECONDS", "15")), 5),
         request_timeout_seconds=max(int(os.getenv("REQUEST_TIMEOUT_SECONDS", "15")), 3),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         feishu_webhook_url=os.getenv("FEISHU_WEBHOOK_URL") or None,

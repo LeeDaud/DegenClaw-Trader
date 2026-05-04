@@ -11,7 +11,7 @@ from db.models import (
     Alert, SystemEvent, AIPotRound, LeaderboardSnapshot,
     TradeSignalModel, PaperPositionModel,
     PotSubAgent, CouncilEvaluation, CouncilAgentScore,
-    PotPnlSnapshot, CouncilLeaderboardScore,
+    PotPnlSnapshot, CouncilLeaderboardScore, PriceTick,
     SignalOutcome, utc_now_iso,
 )
 
@@ -84,6 +84,14 @@ CREATE TABLE IF NOT EXISTS token_market_snapshots (
     sell_slippage REAL NOT NULL DEFAULT 0.0,
     holder_count INTEGER NOT NULL DEFAULT 0,
     top_10_holder_pct REAL NOT NULL DEFAULT 0.0,
+    snapshot_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS price_ticks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token_address TEXT NOT NULL,
+    price_usd REAL NOT NULL DEFAULT 0.0,
+    volume_1h REAL NOT NULL DEFAULT 0.0,
     snapshot_at TEXT NOT NULL
 );
 
@@ -295,6 +303,7 @@ CREATE INDEX IF NOT EXISTS idx_agents_token ON agents(token_address);
 CREATE INDEX IF NOT EXISTS idx_snapshots_agent_time ON agent_snapshots(agent_id, snapshot_at DESC);
 CREATE INDEX IF NOT EXISTS idx_tokens_address ON tokens(token_address);
 CREATE INDEX IF NOT EXISTS idx_market_snapshots_token_time ON token_market_snapshots(token_address, snapshot_at DESC);
+CREATE INDEX IF NOT EXISTS idx_price_ticks_token_time ON price_ticks(token_address, snapshot_at DESC);
 CREATE INDEX IF NOT EXISTS idx_events_time ON system_events(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_events_module ON system_events(module);
 CREATE INDEX IF NOT EXISTS idx_scores_agent_scored ON agent_scores(agent_id, scored_at DESC);
@@ -586,6 +595,32 @@ class Database:
                 (token_address, limit),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    # --- 高频价格 tick ---
+
+    def insert_price_ticks(self, ticks: list[PriceTick]) -> None:
+        with self._connect() as conn:
+            conn.executemany(
+                "INSERT INTO price_ticks(token_address, price_usd, volume_1h, snapshot_at) VALUES(?, ?, ?, ?)",
+                [(t.token_address, t.price_usd, t.volume_1h, t.snapshot_at) for t in ticks],
+            )
+            conn.commit()
+
+    def get_price_ticks(self, token_address: str, limit: int = 50) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM price_ticks WHERE token_address = ? ORDER BY snapshot_at DESC LIMIT ?",
+                (token_address, limit),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def cleanup_old_price_ticks(self, keep_hours: int = 1) -> int:
+        from datetime import datetime, timedelta, timezone
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=keep_hours)).isoformat().replace("+00:00", "Z")
+        with self._connect() as conn:
+            cursor = conn.execute("DELETE FROM price_ticks WHERE snapshot_at < ?", (cutoff,))
+            conn.commit()
+        return cursor.rowcount
 
     # --- Leaderboard Snapshot ---
 

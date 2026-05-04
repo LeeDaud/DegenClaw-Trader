@@ -141,6 +141,19 @@ class TokenMarketSnapshot:
         return asdict(self)
 
 
+# --- 高频价格 tick（供烛图反转分析） ---
+
+@dataclass(slots=True)
+class PriceTick:
+    token_address: str
+    price_usd: float
+    volume_1h: float
+    snapshot_at: str
+
+    def as_record(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 # --- 排行榜快照 ---
 
 @dataclass(slots=True)
