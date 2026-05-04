@@ -38,7 +38,8 @@
       "WebFetch(domain:degen.virtuals.io)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(kill -9 30964)"
     ]
   }
 }

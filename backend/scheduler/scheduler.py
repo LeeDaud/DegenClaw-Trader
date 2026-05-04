@@ -34,6 +34,16 @@ logger = logging.getLogger(__name__)
 _pot_pnl_cooldown: dict[str, float] = {}
 _POT_PNL_COOLDOWN_SECONDS = 900
 
+# 信号状态管理器（跨采集周期持久化，方向确认计数需要跨周期累积）
+_state_manager: SignalStateManager | None = None
+
+
+def _get_state_manager() -> SignalStateManager:
+    global _state_manager
+    if _state_manager is None:
+        _state_manager = SignalStateManager()
+    return _state_manager
+
 
 async def run_collection(database: Database, settings: Settings) -> dict[str, int]:
     """执行一轮完整采集"""
@@ -46,8 +56,8 @@ async def run_collection(database: Database, settings: Settings) -> dict[str, in
 
     summary = {"agents": 0, "tokens": 0, "pot": 0}
 
-    # 信号状态管理器（贯穿本次采集周期的所有信号检测）
-    state_manager = SignalStateManager()
+    # 信号状态管理器（跨周期持久化，方向确认需累加之前轮次的读数）
+    state_manager = _get_state_manager()
 
     try:
         # 1. 采集 Agent 排行榜
